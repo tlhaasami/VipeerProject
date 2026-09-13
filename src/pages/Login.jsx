@@ -1,12 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Layers, Shield, ArrowRight, UserCheck, Key, Compass } from 'lucide-react';
+import { Layers, Shield, ArrowRight, UserCheck, Key, Compass, Building2, Truck, Users, ChevronDown, Check } from 'lucide-react';
 
 export const Login = ({ onLoginError }) => {
   const { login, loading } = useAuth();
   const [username, setUsername] = useState('coordinator');
   const [password, setPassword] = useState('admin123');
   const [domain, setDomain] = useState('coordinator');
+  const [domainDropdownOpen, setDomainDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const domainOptions = [
+    {
+      id: 'coordinator',
+      label: 'Coordinator (Operations & Dispatch)',
+      shortLabel: 'Coordinator',
+      icon: Building2
+    },
+    {
+      id: 'supplier',
+      label: 'Supplier (Fulfillment & Delivery)',
+      shortLabel: 'Supplier',
+      icon: Truck
+    },
+    {
+      id: 'customer',
+      label: 'Customer (Procurement & Orders)',
+      shortLabel: 'Customer',
+      icon: Users
+    }
+  ];
+
+  const selectedDomainObj = domainOptions.find((d) => d.id === domain) || domainOptions[0];
+  const SelectedIcon = selectedDomainObj.icon;
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDomainDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,6 +56,7 @@ export const Login = ({ onLoginError }) => {
     setUsername(u);
     setPassword(p);
     setDomain(d);
+    setDomainDropdownOpen(false);
   };
 
   return (
@@ -88,24 +125,58 @@ export const Login = ({ onLoginError }) => {
               </div>
             </div>
 
-            {/* Domain Dropdown */}
+            {/* Custom Styled Domain Dropdown */}
             <div>
               <label className="block text-xs font-bold text-[#2D0000] uppercase tracking-wider mb-1.5">
                 Select Workspace Domain
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#757D6F]">
-                  <Compass className="w-4 h-4" />
-                </div>
-                <select
-                  value={domain}
-                  onChange={(e) => setDomain(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-[#F8F6EC] border border-[#D8D2BC] rounded-xl text-sm text-[#2D0000] focus:outline-none focus:border-[#6D0808] focus:ring-1 focus:ring-[#6D0808] transition-all capitalize cursor-pointer font-semibold"
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setDomainDropdownOpen(!domainDropdownOpen)}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 bg-[#F8F6EC] hover:bg-[#EEEAD7]/70 border border-[#D8D2BC] focus:border-[#6D0808] focus:ring-1 focus:ring-[#6D0808] rounded-xl text-sm text-[#2D0000] transition-all cursor-pointer text-left font-medium"
                 >
-                  <option value="coordinator">Coordinator (Operations & Dispatch)</option>
-                  <option value="supplier">Supplier (Fulfillment & Delivery)</option>
-                  <option value="customer">Customer (Procurement & Orders)</option>
-                </select>
+                  <div className="flex items-center space-x-2.5 truncate">
+                    <SelectedIcon className="w-4 h-4 text-[#6D0808] shrink-0" />
+                    <span className="truncate font-semibold text-xs sm:text-sm">{selectedDomainObj.label}</span>
+                  </div>
+                  <ChevronDown
+                    className={`w-4 h-4 text-[#757D6F] shrink-0 ml-2 transition-transform duration-200 ${
+                      domainDropdownOpen ? 'rotate-180 text-[#6D0808]' : ''
+                    }`}
+                  />
+                </button>
+
+                {/* Floating Custom Menu */}
+                {domainDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-[#D8D2BC] rounded-xl shadow-xl z-50 p-1.5 space-y-1 animate-in fade-in duration-150">
+                    {domainOptions.map((opt) => {
+                      const Icon = opt.icon;
+                      const isSelected = opt.id === domain;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => {
+                            setDomain(opt.id);
+                            setDomainDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs sm:text-sm transition-colors text-left ${
+                            isSelected
+                              ? 'bg-[#6D0808] text-[#EEEAD7] font-bold shadow-sm'
+                              : 'text-[#2D0000] hover:bg-[#F8F6EC] font-medium'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-2.5 truncate">
+                            <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-[#EEEAD7]' : 'text-[#6D0808]'}`} />
+                            <span className="truncate">{opt.label}</span>
+                          </div>
+                          {isSelected && <Check className="w-4 h-4 shrink-0 ml-2 text-[#EEEAD7]" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -113,7 +184,7 @@ export const Login = ({ onLoginError }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 py-3 px-4 bg-[#6D0808] hover:bg-[#820a0a] text-[#EEEAD7] font-semibold rounded-xl text-sm transition-all shadow-md shadow-[#6D0808]/20 flex items-center justify-center space-x-2 group disabled:opacity-50"
+              className="w-full mt-2 py-3 px-4 bg-[#6D0808] hover:bg-[#820a0a] text-[#EEEAD7] font-semibold rounded-xl text-sm transition-all shadow-md shadow-[#6D0808]/20 flex items-center justify-center space-x-2 group disabled:opacity-50 cursor-pointer"
             >
               <span>{loading ? 'Authenticating...' : 'Sign In'}</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -129,21 +200,33 @@ export const Login = ({ onLoginError }) => {
               <button
                 type="button"
                 onClick={() => handleQuickFill('coordinator', 'admin123', 'coordinator')}
-                className="p-2 bg-[#F8F6EC] hover:bg-[#EEEAD7] border border-[#D8D2BC] rounded-lg text-[#6D0808] font-bold text-center transition-all"
+                className={`p-2 border rounded-lg font-bold text-center transition-all cursor-pointer ${
+                  domain === 'coordinator'
+                    ? 'bg-[#6D0808] text-[#EEEAD7] border-[#6D0808]'
+                    : 'bg-[#F8F6EC] hover:bg-[#EEEAD7] border-[#D8D2BC] text-[#6D0808]'
+                }`}
               >
                 Coordinator
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickFill('supplier1', 'supp123', 'supplier')}
-                className="p-2 bg-[#F8F6EC] hover:bg-[#EEEAD7] border border-[#D8D2BC] rounded-lg text-[#2D0000] font-bold text-center transition-all"
+                className={`p-2 border rounded-lg font-bold text-center transition-all cursor-pointer ${
+                  domain === 'supplier'
+                    ? 'bg-[#2D0000] text-[#EEEAD7] border-[#2D0000]'
+                    : 'bg-[#F8F6EC] hover:bg-[#EEEAD7] border-[#D8D2BC] text-[#2D0000]'
+                }`}
               >
                 Supplier
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickFill('customer1', 'cust123', 'customer')}
-                className="p-2 bg-[#F8F6EC] hover:bg-[#EEEAD7] border border-[#D8D2BC] rounded-lg text-[#2D0000] font-bold text-center transition-all"
+                className={`p-2 border rounded-lg font-bold text-center transition-all cursor-pointer ${
+                  domain === 'customer'
+                    ? 'bg-[#2D0000] text-[#EEEAD7] border-[#2D0000]'
+                    : 'bg-[#F8F6EC] hover:bg-[#EEEAD7] border-[#D8D2BC] text-[#2D0000]'
+                }`}
               >
                 Customer
               </button>

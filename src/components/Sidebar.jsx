@@ -10,8 +10,6 @@ import {
   Building2,
   Truck,
   LogOut,
-  UserCheck,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   BarChart3,
@@ -21,13 +19,11 @@ import {
   FileText,
   Navigation,
   FileCheck,
-  Boxes,
-  HelpCircle
+  Boxes
 } from 'lucide-react';
 
 export const Sidebar = ({ currentView, onNavigate }) => {
-  const { currentUser, domain, logout, switchDomain } = useAuth();
-  const [switchOpen, setSwitchOpen] = useState(false);
+  const { currentUser, domain, logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const getMenuItems = () => {
@@ -89,7 +85,7 @@ export const Sidebar = ({ currentView, onNavigate }) => {
         )}
       </button>
 
-      {/* Inner Scrollable Menu Area (strictly no horizontal scrollbar) */}
+      {/* Inner Scrollable Menu Area */}
       <div className="h-full w-full flex flex-col justify-between p-3.5 overflow-y-auto overflow-x-hidden">
         {/* Top Section */}
         <div className="space-y-4">
@@ -143,88 +139,8 @@ export const Sidebar = ({ currentView, onNavigate }) => {
           </nav>
         </div>
 
-        {/* Bottom Section: Switch Portal, User Info & Exit */}
-        <div className="pt-3 border-t border-[#D8D2BC] space-y-2.5">
-          {/* Switch Portal Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setSwitchOpen(!switchOpen)}
-              className={`w-full flex items-center ${
-                isCollapsed ? 'justify-center p-2' : 'justify-between px-3 py-2'
-              } bg-[#F8F6EC] hover:bg-[#EEEAD7] text-[#2D0000] rounded-xl text-xs font-semibold border border-[#D8D2BC] transition-colors`}
-              title="Switch portal view"
-            >
-              <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'space-x-2'} min-w-0`}>
-                <UserCheck className="w-3.5 h-3.5 text-[#6D0808] shrink-0" />
-                {!isCollapsed && <span className="truncate">Switch Portal</span>}
-              </div>
-              {!isCollapsed && (
-                <ChevronDown className={`w-3.5 h-3.5 text-[#757D6F] shrink-0 transition-transform ${switchOpen ? 'rotate-180' : ''}`} />
-              )}
-            </button>
-
-            {switchOpen && (
-              <div
-                className={`absolute bottom-full ${
-                  isCollapsed ? 'left-full ml-2 w-48' : 'left-0 w-full'
-                } mb-2 bg-white border border-[#D8D2BC] rounded-xl shadow-xl p-2 z-50 text-xs space-y-1`}
-              >
-                <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[#757D6F] border-b border-[#D8D2BC] mb-1">
-                  Select Portal View
-                </div>
-                <button
-                  onClick={() => {
-                    switchDomain('coordinator');
-                    setSwitchOpen(false);
-                    onNavigate('dashboard');
-                  }}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition-colors ${
-                    domain === 'coordinator' ? 'bg-[#6D0808]/10 text-[#6D0808] font-bold' : 'hover:bg-[#F8F6EC] text-[#2D0000]'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2 truncate">
-                    <Building2 className="w-3.5 h-3.5 text-[#6D0808] shrink-0" />
-                    <span className="truncate">Coordinator</span>
-                  </div>
-                  {domain === 'coordinator' && <span className="text-[#6D0808] shrink-0">✓</span>}
-                </button>
-                <button
-                  onClick={() => {
-                    switchDomain('supplier');
-                    setSwitchOpen(false);
-                    onNavigate('dashboard');
-                  }}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition-colors ${
-                    domain === 'supplier' ? 'bg-[#757D6F]/20 text-[#2D0000] font-bold' : 'hover:bg-[#F8F6EC] text-[#2D0000]'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2 truncate">
-                    <Truck className="w-3.5 h-3.5 text-[#757D6F] shrink-0" />
-                    <span className="truncate">Supplier</span>
-                  </div>
-                  {domain === 'supplier' && <span className="text-[#2D0000] shrink-0">✓</span>}
-                </button>
-                <button
-                  onClick={() => {
-                    switchDomain('customer');
-                    setSwitchOpen(false);
-                    onNavigate('dashboard');
-                  }}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition-colors ${
-                    domain === 'customer' ? 'bg-[#2D0000]/10 text-[#2D0000] font-bold' : 'hover:bg-[#F8F6EC] text-[#2D0000]'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2 truncate">
-                    <Users className="w-3.5 h-3.5 text-[#2D0000] shrink-0" />
-                    <span className="truncate">Customer</span>
-                  </div>
-                  {domain === 'customer' && <span className="text-[#2D0000] shrink-0">✓</span>}
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* User Card & Exit Button */}
+        {/* Bottom Section: User Info & Exit */}
+        <div className="pt-3 border-t border-[#D8D2BC]">
           <div
             className={`p-2 bg-[#F8F6EC] border border-[#D8D2BC] rounded-xl flex items-center ${
               isCollapsed ? 'justify-center flex-col gap-2' : 'justify-between'
@@ -238,7 +154,7 @@ export const Sidebar = ({ currentView, onNavigate }) => {
                 </div>
                 <button
                   onClick={logout}
-                  className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-white hover:bg-rose-50 text-[#6D0808] hover:text-rose-700 border border-[#D8D2BC] text-xs font-semibold transition-all shrink-0 shadow-sm"
+                  className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-white hover:bg-rose-50 text-[#6D0808] hover:text-rose-700 border border-[#D8D2BC] text-xs font-semibold transition-all shrink-0 shadow-sm cursor-pointer"
                   title="Sign Out / Exit"
                 >
                   <LogOut className="w-3.5 h-3.5" />
@@ -248,7 +164,7 @@ export const Sidebar = ({ currentView, onNavigate }) => {
             ) : (
               <button
                 onClick={logout}
-                className="p-2 rounded-lg bg-white hover:bg-rose-50 text-[#6D0808] hover:text-rose-700 border border-[#D8D2BC] transition-all shadow-sm"
+                className="p-2 rounded-lg bg-white hover:bg-rose-50 text-[#6D0808] hover:text-rose-700 border border-[#D8D2BC] transition-all shadow-sm cursor-pointer"
                 title={`Sign Out (${currentUser?.fullName})`}
               >
                 <LogOut className="w-4 h-4" />
@@ -260,5 +176,3 @@ export const Sidebar = ({ currentView, onNavigate }) => {
     </aside>
   );
 };
-
-
