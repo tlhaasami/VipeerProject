@@ -36,6 +36,7 @@ const MainLayout = () => {
   const { isAuthenticated, domain } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
   const [loginErrorState, setLoginErrorState] = useState(null);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // If not authenticated
   if (!isAuthenticated) {
@@ -126,10 +127,21 @@ const MainLayout = () => {
 
   return (
     <div className="h-screen w-screen max-h-screen overflow-hidden bg-[#EEEAD7] text-[#2D0000] flex flex-col font-sans">
-      <Navbar />
-      <div className="flex-1 flex overflow-hidden min-h-0">
-        <Sidebar currentView={currentView} onNavigate={setCurrentView} />
-        <main className="flex-1 overflow-y-auto min-h-0 p-4 sm:p-6 lg:p-8 bg-[#EEEAD7]">
+      <Navbar
+        onToggleMobileMenu={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+        isMobileMenuOpen={isMobileSidebarOpen}
+      />
+      <div className="flex-1 flex overflow-hidden min-h-0 relative">
+        <Sidebar
+          currentView={currentView}
+          onNavigate={(viewId) => {
+            setCurrentView(viewId);
+            setIsMobileSidebarOpen(false);
+          }}
+          isMobileOpen={isMobileSidebarOpen}
+          onCloseMobile={() => setIsMobileSidebarOpen(false)}
+        />
+        <main className="flex-1 overflow-y-auto min-h-0 p-3.5 sm:p-6 lg:p-8 bg-[#EEEAD7] touch-pan-y">
           <div className="max-w-7xl mx-auto pb-12">
             {renderViewContent()}
           </div>

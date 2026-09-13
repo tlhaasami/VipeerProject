@@ -1,24 +1,65 @@
 import React from 'react';
-import { Layers } from 'lucide-react';
+import { Layers, Menu, X, Building2, Truck, Users } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
-export const Navbar = () => {
+export const Navbar = ({ onToggleMobileMenu, isMobileMenuOpen }) => {
+  const { domain, currentUser } = useAuth();
+
+  const getDomainIcon = () => {
+    switch (domain) {
+      case 'coordinator': return <Building2 className="w-3.5 h-3.5" />;
+      case 'supplier': return <Truck className="w-3.5 h-3.5" />;
+      case 'customer': return <Users className="w-3.5 h-3.5" />;
+      default: return null;
+    }
+  };
+
   return (
-    <header className="shrink-0 sticky top-0 z-30 bg-white border-b border-[#D8D2BC] text-[#2D0000] shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Logo & Brand */}
+    <header className="shrink-0 sticky top-0 z-40 bg-white border-b border-[#D8D2BC] text-[#2D0000] shadow-sm">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        {/* Left: Hamburger (Mobile/Tablet) & Brand Logo */}
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#6D0808] to-[#8A1212] flex items-center justify-center shadow-md shadow-[#6D0808]/20">
-            <Layers className="w-5 h-5 text-[#EEEAD7]" />
-          </div>
-          <div>
-            <span className="font-extrabold text-lg tracking-tight text-[#2D0000]">
-              VIPER <span className="text-[#6D0808]">SCM</span>
-            </span>
-            <p className="text-[11px] text-[#757D6F] leading-none font-medium">Supply Chain Management</p>
+          {onToggleMobileMenu && (
+            <button
+              onClick={onToggleMobileMenu}
+              className="md:hidden p-2 rounded-xl bg-[#F8F6EC] hover:bg-[#EEEAD7] text-[#2D0000] border border-[#D8D2BC] transition-all cursor-pointer shrink-0"
+              title={isMobileMenuOpen ? 'Close Navigation' : 'Open Navigation'}
+              aria-label="Toggle navigation menu"
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5 text-[#6D0808]" /> : <Menu className="w-5 h-5 text-[#2D0000]" />}
+            </button>
+          )}
+
+          <div className="flex items-center space-x-2.5">
+            <div className="w-9 sm:w-10 h-9 sm:h-10 rounded-xl bg-gradient-to-tr from-[#6D0808] to-[#8A1212] flex items-center justify-center shadow-md shadow-[#6D0808]/20 shrink-0">
+              <Layers className="w-5 h-5 text-[#EEEAD7]" />
+            </div>
+            <div>
+              <span className="font-extrabold text-base sm:text-lg tracking-tight text-[#2D0000] block leading-none">
+                VIPER <span className="text-[#6D0808]">SCM</span>
+              </span>
+              <p className="text-[10px] sm:text-[11px] text-[#757D6F] leading-none font-medium mt-1 hidden xs:block">
+                Supply Chain Management
+              </p>
+            </div>
           </div>
         </div>
+
+        {/* Right: Active Role Badge */}
+        {domain && (
+          <div className="flex items-center space-x-2">
+            <div className="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 bg-[#F8F6EC] border border-[#D8D2BC] rounded-xl text-xs font-bold text-[#2D0000]">
+              <span className="text-[#6D0808]">{getDomainIcon()}</span>
+              <span className="capitalize">{domain} Workspace</span>
+            </div>
+            {currentUser && (
+              <div className="w-8 h-8 rounded-full bg-[#6D0808] text-[#EEEAD7] font-bold text-xs flex items-center justify-center border-2 border-white shadow-sm sm:hidden">
+                {currentUser.fullName ? currentUser.fullName[0].toUpperCase() : 'U'}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );
 };
-
