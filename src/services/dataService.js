@@ -573,14 +573,41 @@ export const dataService = {
 
   async addUser(userData) {
     const startTime = performance.now();
+    const cleanUsername = (userData.username || '').trim().toLowerCase();
+    const cleanEmail = (userData.email || '').trim().toLowerCase();
+
+    if (!cleanUsername) {
+      throw new Error('Username is required.');
+    }
+    if (!cleanEmail) {
+      throw new Error('Email address is required.');
+    }
+
+    // 1. Check existing users in database and storage for uniqueness
+    const currentUsers = await this.getUsers();
+
+    const existingUsername = currentUsers.find(
+      u => (u.username || '').toLowerCase() === cleanUsername
+    );
+    if (existingUsername) {
+      throw new Error(`Username '@${cleanUsername}' is already taken. Please choose another username.`);
+    }
+
+    const existingEmail = currentUsers.find(
+      u => (u.email || '').toLowerCase() === cleanEmail
+    );
+    if (existingEmail) {
+      throw new Error(`Email address '${cleanEmail}' is already registered. Please enter a different email.`);
+    }
+
     const newUser = {
       id: 'user-' + String(Date.now()).slice(-6),
-      username: userData.username.trim().toLowerCase(),
+      username: cleanUsername,
       password: userData.password,
-      domain: userData.domain,
-      fullName: userData.fullName.trim(),
-      email: userData.email.trim().toLowerCase(),
-      roleTitle: userData.roleTitle || `${userData.domain.toUpperCase()} Specialist`,
+      domain: userData.domain || 'coordinator',
+      fullName: (userData.fullName || '').trim(),
+      email: cleanEmail,
+      roleTitle: userData.roleTitle?.trim() || `${userData.domain?.toUpperCase()} Specialist`,
       createdAt: new Date().toISOString()
     };
 
@@ -594,10 +621,27 @@ export const dataService = {
           email: newUser.email,
           role_title: newUser.roleTitle
         }]).select();
-        if (!error && data && data[0]) {
+
+        if (error) {
+          if (error.code === '23505' || error.message?.includes('duplicate key') || error.message?.includes('unique')) {
+            if (error.message?.includes('username') || error.details?.includes('username')) {
+              throw new Error(`Username '@${cleanUsername}' is already registered in the database.`);
+            }
+            if (error.message?.includes('email') || error.details?.includes('email')) {
+              throw new Error(`Email '${cleanEmail}' is already registered in the database.`);
+            }
+            throw new Error('A user account with this username or email already exists.');
+          }
+          throw error;
+        }
+
+        if (data && data[0]) {
           newUser.id = data[0].id;
         }
       } catch (err) {
+        if (err.message && (err.message.includes('already') || err.message.includes('duplicate') || err.message.includes('unique'))) {
+          throw err;
+        }
         console.warn('Supabase addUser fallback:', err);
       }
     }
@@ -612,24 +656,63 @@ export const dataService = {
 
   async updateUser(id, userData) {
     const startTime = performance.now();
+    const cleanEmail = userData.email ? userData.email.trim().toLowerCase() : null;
+    const cleanUsername = userData.username ? userData.username.trim().toLowerCase() : null;
+
+    const currentUsers = await this.getUsers();
+
+    if (cleanUsername) {
+      const duplicateUsername = currentUsers.find(
+        u => u.id !== id && (u.username || '').toLowerCase() === cleanUsername
+      );
+      if (duplicateUsername) {
+        throw new Error(`Username '@${cleanUsername}' is already used by another account.`);
+      }
+    }
+
+    if (cleanEmail) {
+      const duplicateEmail = currentUsers.find(
+        u => u.id !== id && (u.email || '').toLowerCase() === cleanEmail
+      );
+      if (duplicateEmail) {
+        throw new Error(`Email '${cleanEmail}' is already registered to another account.`);
+      }
+    }
+
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('users').update({
-          full_name: userData.fullName,
-          email: userData.email,
-          role_title: userData.roleTitle,
+        const { error } = await supabase.from('users').update({
+          full_name: userData.fullName?.trim(),
+          email: cleanEmail,
+          role_title: userData.roleTitle?.trim(),
           domain: userData.domain,
+          ...(cleanUsername ? { username: cleanUsername } : {}),
           ...(userData.password ? { password_hash: userData.password } : {})
         }).eq('id', id);
+
+        if (error) {
+          if (error.code === '23505' || error.message?.includes('duplicate key') || error.message?.includes('unique')) {
+            throw new Error('This username or email is already registered to another user.');
+          }
+          throw error;
+        }
       } catch (err) {
+        if (err.message && (err.message.includes('already') || err.message.includes('duplicate'))) {
+          throw err;
+        }
         console.warn('Supabase updateUser fallback:', err);
       }
     }
 
     const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
-    const index = users.findIndex(u => u.id === id || u.username === userData.username);
+    const index = users.findIndex(u => u.id === id || (cleanUsername && u.username === cleanUsername));
     if (index !== -1) {
-      users[index] = { ...users[index], ...userData };
+      users[index] = {
+        ...users[index],
+        ...userData,
+        ...(cleanEmail ? { email: cleanEmail } : {}),
+        ...(cleanUsername ? { username: cleanUsername } : {})
+      };
       localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
     }
     logTransaction('UPDATE_USER', 'User', id, startTime, userData, 'coordinator');

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { dataService } from '../../services/dataService';
 import { useToast } from '../../components/NotificationToast';
 import {
@@ -10,11 +10,9 @@ import {
   Shield,
   Trash2,
   Edit2,
-  Key,
-  Mail,
-  CheckCircle2,
   X,
-  Filter,
+  ChevronDown,
+  Check,
   UserCheck
 } from 'lucide-react';
 
@@ -31,6 +29,14 @@ export const ManageUsers = () => {
   const [currentUserToEdit, setCurrentUserToEdit] = useState(null);
   const [userToDelete, setUserToDelete] = useState(null);
 
+  // Custom Dropdown State for Add Modal
+  const [addDomainDropdownOpen, setAddDomainDropdownOpen] = useState(false);
+  const addDropdownRef = useRef(null);
+
+  // Custom Dropdown State for Edit Modal
+  const [editDomainDropdownOpen, setEditDomainDropdownOpen] = useState(false);
+  const editDropdownRef = useRef(null);
+
   // Form State
   const [formData, setFormData] = useState({
     fullName: '',
@@ -40,6 +46,44 @@ export const ManageUsers = () => {
     domain: 'coordinator',
     roleTitle: ''
   });
+
+  const domainOptions = [
+    {
+      id: 'coordinator',
+      label: 'Coordinator (Operations & Dispatch)',
+      shortLabel: 'Coordinator',
+      icon: Building2
+    },
+    {
+      id: 'supplier',
+      label: 'Supplier (Fulfillment & Delivery)',
+      shortLabel: 'Supplier',
+      icon: Truck
+    },
+    {
+      id: 'customer',
+      label: 'Customer (Procurement & Orders)',
+      shortLabel: 'Customer',
+      icon: Users
+    }
+  ];
+
+  const selectedAddDomainObj =
+    domainOptions.find((d) => d.id === formData.domain) || domainOptions[0];
+  const SelectedAddIcon = selectedAddDomainObj.icon;
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (addDropdownRef.current && !addDropdownRef.current.contains(event.target)) {
+        setAddDomainDropdownOpen(false);
+      }
+      if (editDropdownRef.current && !editDropdownRef.current.contains(event.target)) {
+        setEditDomainDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -66,6 +110,7 @@ export const ManageUsers = () => {
       domain: 'coordinator',
       roleTitle: ''
     });
+    setAddDomainDropdownOpen(false);
     setIsAddModalOpen(true);
   };
 
@@ -79,30 +124,31 @@ export const ManageUsers = () => {
       domain: user.domain || 'coordinator',
       roleTitle: user.roleTitle || ''
     });
+    setEditDomainDropdownOpen(false);
     setIsEditModalOpen(true);
   };
 
   const handleSaveNewUser = async (e) => {
     e.preventDefault();
-    if (!formData.fullName || !formData.username || !formData.email || !formData.password) {
-      addToast('Please fill all required fields', 'error');
+    if (!formData.fullName.trim() || !formData.username.trim() || !formData.email.trim() || !formData.password) {
+      addToast('Please fill all required fields (*)', 'error');
       return;
     }
 
     try {
       await dataService.addUser(formData);
-      addToast(`User ${formData.fullName} successfully provisioned!`, 'success');
+      addToast(`User account @${formData.username.trim().toLowerCase()} successfully provisioned!`, 'success');
       setIsAddModalOpen(false);
       loadUsers();
     } catch (err) {
-      addToast('Error provisioning user account', 'error');
+      addToast(err.message || 'Error provisioning user account', 'error');
     }
   };
 
   const handleSaveEditUser = async (e) => {
     e.preventDefault();
-    if (!formData.fullName || !formData.email) {
-      addToast('Please fill required fields', 'error');
+    if (!formData.fullName.trim() || !formData.email.trim()) {
+      addToast('Please fill required fields (*)', 'error');
       return;
     }
 
@@ -113,7 +159,7 @@ export const ManageUsers = () => {
       setCurrentUserToEdit(null);
       loadUsers();
     } catch (err) {
-      addToast('Error updating user', 'error');
+      addToast(err.message || 'Error updating user account', 'error');
     }
   };
 
@@ -121,7 +167,7 @@ export const ManageUsers = () => {
     if (!userToDelete) return;
     try {
       await dataService.deleteUser(userToDelete.id, userToDelete.username);
-      addToast(`User account ${userToDelete.fullName} removed`, 'info');
+      addToast(`User account @${userToDelete.username} removed from directory`, 'info');
       setUserToDelete(null);
       loadUsers();
     } catch (err) {
@@ -157,7 +203,7 @@ export const ManageUsers = () => {
         </div>
         <button
           onClick={handleOpenAddModal}
-          className="flex items-center space-x-2 px-4 py-2.5 bg-[#6D0808] hover:bg-[#2D0000] text-[#EEEAD7] font-bold rounded-xl text-xs transition-all shadow-md shadow-[#6D0808]/20 cursor-pointer shrink-0"
+          className="flex items-center space-x-2 px-4 py-2.5 bg-[#6D0808] hover:bg-[#2D0000] text-[#EEEAD7] font-bold rounded-xl text-xs transition-all shadow-md shadow-[#6D0808]/20 cursor-pointer shrink-0 hover:scale-105 active:scale-95"
         >
           <UserPlus className="w-4 h-4" />
           <span>Provision New User</span>
@@ -173,7 +219,7 @@ export const ManageUsers = () => {
           </div>
           <p className="text-2xl font-black text-[#2D0000] mt-1">{users.length}</p>
           <p className="text-[11px] text-emerald-700 font-semibold mt-1 flex items-center">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block mr-1.5"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block mr-1.5" />
             100% Active in Database
           </p>
         </div>
@@ -375,7 +421,7 @@ export const ManageUsers = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-[#2D0000] mb-1">Username *</label>
+                  <label className="block font-bold text-[#2D0000] mb-1">Username * (Unique)</label>
                   <input
                     type="text"
                     required
@@ -399,7 +445,7 @@ export const ManageUsers = () => {
               </div>
 
               <div>
-                <label className="block font-bold text-[#2D0000] mb-1">Email Address *</label>
+                <label className="block font-bold text-[#2D0000] mb-1">Email Address * (Unique)</label>
                 <input
                   type="email"
                   required
@@ -410,17 +456,66 @@ export const ManageUsers = () => {
                 />
               </div>
 
+              {/* Custom Styled Workspace Domain Dropdown */}
               <div>
                 <label className="block font-bold text-[#2D0000] mb-1">Workspace Domain *</label>
-                <select
-                  value={formData.domain}
-                  onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
-                  className="w-full px-3 py-2 bg-[#F8F6EC] border border-[#D8D2BC] rounded-xl text-[#2D0000] focus:outline-none focus:border-[#6D0808] font-semibold capitalize"
-                >
-                  <option value="coordinator">Coordinator (Operations & Dispatch)</option>
-                  <option value="supplier">Supplier (Fulfillment & Delivery)</option>
-                  <option value="customer">Customer (Procurement & Orders)</option>
-                </select>
+                <div className="relative" ref={addDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setAddDomainDropdownOpen(!addDomainDropdownOpen)}
+                    className="w-full px-3 py-2 bg-[#F8F6EC] border border-[#D8D2BC] rounded-xl text-xs text-[#2D0000] flex items-center justify-between font-semibold hover:border-[#6D0808] transition-all text-left cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#6D0808]"
+                  >
+                    <div className="flex items-center space-x-2 truncate">
+                      <div className="w-5 h-5 rounded-md bg-[#6D0808]/10 text-[#6D0808] flex items-center justify-center shrink-0">
+                        <SelectedAddIcon className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="truncate">{selectedAddDomainObj.label}</span>
+                    </div>
+                    <ChevronDown
+                      className={`w-4 h-4 text-[#757D6F] transition-transform duration-200 shrink-0 ml-2 ${
+                        addDomainDropdownOpen ? 'rotate-180 text-[#6D0808]' : ''
+                      }`}
+                    />
+                  </button>
+
+                  {addDomainDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#D8D2BC] rounded-xl shadow-xl z-50 overflow-hidden py-1 animate-in fade-in duration-150">
+                      {domainOptions.map((opt) => {
+                        const Icon = opt.icon;
+                        const isSelected = formData.domain === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => {
+                              setFormData({ ...formData, domain: opt.id });
+                              setAddDomainDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 flex items-center justify-between text-left text-xs font-semibold transition-colors cursor-pointer ${
+                              isSelected
+                                ? 'bg-[#6D0808] text-[#EEEAD7]'
+                                : 'text-[#2D0000] hover:bg-[#F8F6EC]'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-2">
+                              <div
+                                className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
+                                  isSelected
+                                    ? 'bg-white/20 text-[#EEEAD7]'
+                                    : 'bg-[#6D0808]/10 text-[#6D0808]'
+                                }`}
+                              >
+                                <Icon className="w-3 h-3" />
+                              </div>
+                              <span>{opt.label}</span>
+                            </div>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-[#EEEAD7]" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -484,7 +579,7 @@ export const ManageUsers = () => {
               </div>
 
               <div>
-                <label className="block font-bold text-[#2D0000] mb-1">Email Address *</label>
+                <label className="block font-bold text-[#2D0000] mb-1">Email Address * (Must be Unique)</label>
                 <input
                   type="email"
                   required

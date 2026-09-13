@@ -30,6 +30,9 @@ export const Login = ({ onLoginError }) => {
 
   // Register / Add User Modal State
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [registerDomainDropdownOpen, setRegisterDomainDropdownOpen] = useState(false);
+  const registerDropdownRef = useRef(null);
+
   const [registerSuccessMessage, setRegisterSuccessMessage] = useState('');
   const [registerErrorMessage, setRegisterErrorMessage] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
@@ -68,10 +71,17 @@ export const Login = ({ onLoginError }) => {
   const selectedDomainObj = domainOptions.find((d) => d.id === domain) || domainOptions[0];
   const SelectedIcon = selectedDomainObj.icon;
 
+  const selectedRegisterDomainObj =
+    domainOptions.find((d) => d.id === registerFormData.domain) || domainOptions[0];
+  const SelectedRegisterIcon = selectedRegisterDomainObj.icon;
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setDomainDropdownOpen(false);
+      }
+      if (registerDropdownRef.current && !registerDropdownRef.current.contains(event.target)) {
+        setRegisterDomainDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -104,6 +114,7 @@ export const Login = ({ onLoginError }) => {
     });
     setRegisterErrorMessage('');
     setRegisterSuccessMessage('');
+    setRegisterDomainDropdownOpen(false);
     setIsRegisterModalOpen(true);
   };
 
@@ -113,28 +124,27 @@ export const Login = ({ onLoginError }) => {
     setRegisterSuccessMessage('');
 
     if (
-      !registerFormData.fullName ||
-      !registerFormData.username ||
-      !registerFormData.email ||
+      !registerFormData.fullName.trim() ||
+      !registerFormData.username.trim() ||
+      !registerFormData.email.trim() ||
       !registerFormData.password
     ) {
-      setRegisterErrorMessage('Please complete all required fields.');
+      setRegisterErrorMessage('Please complete all required fields (*).');
       return;
     }
 
     setIsRegistering(true);
     try {
       await dataService.addUser(registerFormData);
-      setRegisterSuccessMessage(`Account @${registerFormData.username} successfully provisioned! Logging you in...`);
+      setRegisterSuccessMessage(`Account @${registerFormData.username.trim().toLowerCase()} successfully provisioned! Logging in...`);
 
-      // Pre-fill and auto login
       setTimeout(async () => {
         setIsRegisterModalOpen(false);
-        setUsername(registerFormData.username);
+        setUsername(registerFormData.username.trim().toLowerCase());
         setPassword(registerFormData.password);
         setDomain(registerFormData.domain);
         const res = await login(
-          registerFormData.username,
+          registerFormData.username.trim().toLowerCase(),
           registerFormData.password,
           registerFormData.domain
         );
@@ -152,7 +162,7 @@ export const Login = ({ onLoginError }) => {
   return (
     <div className="min-h-screen bg-[#EEEAD7] text-[#2D0000] flex flex-col justify-center items-center p-4 relative overflow-hidden">
       {/* Subtle warm decorative glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[350px] bg-[#6D0808]/5 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[350px] bg-[#6D0808]/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-md w-full relative z-10">
         {/* Header Branding */}
@@ -379,18 +389,18 @@ export const Login = ({ onLoginError }) => {
             </div>
 
             {registerErrorMessage && (
-              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold">
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold leading-relaxed">
                 {registerErrorMessage}
               </div>
             )}
 
             {registerSuccessMessage && (
-              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
+              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold leading-relaxed">
                 {registerSuccessMessage}
               </div>
             )}
 
-            <form onSubmit={handleRegisterSubmit} className="space-y-3 text-xs">
+            <form onSubmit={handleRegisterSubmit} className="space-y-3.5 text-xs">
               <div>
                 <label className="block font-bold text-[#2D0000] mb-1">Full Legal Name *</label>
                 <div className="relative">
@@ -410,7 +420,7 @@ export const Login = ({ onLoginError }) => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-[#2D0000] mb-1">Username *</label>
+                  <label className="block font-bold text-[#2D0000] mb-1">Username * (Must be Unique)</label>
                   <input
                     type="text"
                     required
@@ -438,7 +448,7 @@ export const Login = ({ onLoginError }) => {
                     <button
                       type="button"
                       onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[#757D6F] hover:text-[#6D0808]"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[#757D6F] hover:text-[#6D0808] cursor-pointer"
                     >
                       {showRegisterPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
@@ -447,7 +457,7 @@ export const Login = ({ onLoginError }) => {
               </div>
 
               <div>
-                <label className="block font-bold text-[#2D0000] mb-1">Email Address *</label>
+                <label className="block font-bold text-[#2D0000] mb-1">Email Address * (Must be Unique)</label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-[#757D6F] absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
@@ -463,19 +473,66 @@ export const Login = ({ onLoginError }) => {
                 </div>
               </div>
 
+              {/* Custom Styled Workspace Domain Dropdown */}
               <div>
                 <label className="block font-bold text-[#2D0000] mb-1">Workspace Domain *</label>
-                <select
-                  value={registerFormData.domain}
-                  onChange={(e) =>
-                    setRegisterFormData({ ...registerFormData, domain: e.target.value })
-                  }
-                  className="w-full px-3 py-2 bg-[#F8F6EC] border border-[#D8D2BC] rounded-xl text-[#2D0000] focus:outline-none focus:border-[#6D0808] font-semibold capitalize cursor-pointer"
-                >
-                  <option value="coordinator">Coordinator (Operations & Dispatch)</option>
-                  <option value="supplier">Supplier (Fulfillment & Delivery)</option>
-                  <option value="customer">Customer (Procurement & Orders)</option>
-                </select>
+                <div className="relative" ref={registerDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setRegisterDomainDropdownOpen(!registerDomainDropdownOpen)}
+                    className="w-full px-3 py-2 bg-[#F8F6EC] border border-[#D8D2BC] rounded-xl text-xs text-[#2D0000] flex items-center justify-between font-semibold hover:border-[#6D0808] transition-all text-left cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#6D0808]"
+                  >
+                    <div className="flex items-center space-x-2 truncate">
+                      <div className="w-5 h-5 rounded-md bg-[#6D0808]/10 text-[#6D0808] flex items-center justify-center shrink-0">
+                        <SelectedRegisterIcon className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="truncate">{selectedRegisterDomainObj.label}</span>
+                    </div>
+                    <ChevronDown
+                      className={`w-4 h-4 text-[#757D6F] transition-transform duration-200 shrink-0 ml-2 ${
+                        registerDomainDropdownOpen ? 'rotate-180 text-[#6D0808]' : ''
+                      }`}
+                    />
+                  </button>
+
+                  {registerDomainDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#D8D2BC] rounded-xl shadow-xl z-50 overflow-hidden py-1 animate-in fade-in duration-150">
+                      {domainOptions.map((opt) => {
+                        const Icon = opt.icon;
+                        const isSelected = registerFormData.domain === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => {
+                              setRegisterFormData({ ...registerFormData, domain: opt.id });
+                              setRegisterDomainDropdownOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 flex items-center justify-between text-left text-xs font-semibold transition-colors cursor-pointer ${
+                              isSelected
+                                ? 'bg-[#6D0808] text-[#EEEAD7]'
+                                : 'text-[#2D0000] hover:bg-[#F8F6EC]'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-2">
+                              <div
+                                className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
+                                  isSelected
+                                    ? 'bg-white/20 text-[#EEEAD7]'
+                                    : 'bg-[#6D0808]/10 text-[#6D0808]'
+                                }`}
+                              >
+                                <Icon className="w-3 h-3" />
+                              </div>
+                              <span>{opt.label}</span>
+                            </div>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-[#EEEAD7]" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
