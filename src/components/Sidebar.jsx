@@ -169,21 +169,16 @@ export const Sidebar = ({ currentView, onNavigate, isMobileOpen, onCloseMobile }
             <button
               onClick={logout}
               className={`w-full flex items-center ${
-                isCollapsed ? 'justify-start md:justify-center px-3 md:px-2 py-2.5' : 'justify-between px-3.5 py-2.5'
-              } rounded-xl bg-[#F8F6EC] hover:bg-rose-50 text-[#6D0808] hover:text-rose-700 border border-[#D8D2BC] hover:border-rose-300 font-bold text-xs transition-all shadow-xs group cursor-pointer`}
+                isCollapsed ? 'justify-start md:justify-center px-3 md:px-2 py-2.5' : 'justify-between px-3 py-2.5'
+              } rounded-xl text-xs font-semibold text-[#50574B] hover:bg-[#6D0808] hover:text-[#EEEAD7] hover:shadow-md hover:shadow-[#6D0808]/20 transition-all cursor-pointer group`}
               title="Sign Out / Exit"
             >
-              <div className="flex items-center space-x-2.5 min-w-0">
-                <div className="w-6 h-6 rounded-lg bg-[#6D0808]/10 group-hover:bg-rose-100 flex items-center justify-center shrink-0 transition-colors">
-                  <LogOut className="w-3.5 h-3.5 text-[#6D0808] group-hover:text-rose-700" />
-                </div>
+              <div className={`flex items-center ${isCollapsed ? 'space-x-2.5 md:space-x-0 md:justify-center' : 'space-x-2.5'} min-w-0`}>
+                <LogOut className="w-4 h-4 shrink-0 text-[#757D6F] group-hover:text-[#EEEAD7] transition-colors" />
                 <span className={`truncate ${isCollapsed ? 'inline md:hidden' : 'inline'}`}>
                   Sign Out / Exit
                 </span>
               </div>
-              <span className={`text-[10px] text-[#757D6F] font-mono group-hover:text-rose-600 uppercase ${isCollapsed ? 'hidden' : 'inline'}`}>
-                Exit
-              </span>
             </button>
           </div>
         </div>

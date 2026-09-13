@@ -1,22 +1,9 @@
 import React from 'react';
-import { Layers, Menu, X, Building2, Truck, Users } from 'lucide-react';
+import { Layers, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const Navbar = ({ onToggleMobileMenu, isMobileMenuOpen }) => {
-  const { domain, currentUser } = useAuth();
-
-  const getDomainIcon = () => {
-    switch (domain) {
-      case 'coordinator':
-        return <Building2 className="w-3.5 h-3.5" />;
-      case 'supplier':
-        return <Truck className="w-3.5 h-3.5" />;
-      case 'customer':
-        return <Users className="w-3.5 h-3.5" />;
-      default:
-        return null;
-    }
-  };
+  const { currentUser } = useAuth();
 
   const userInitials = currentUser?.fullName
     ? currentUser.fullName
@@ -58,25 +45,18 @@ export const Navbar = ({ onToggleMobileMenu, isMobileMenuOpen }) => {
           </div>
         </div>
 
-        {/* Right: Active User Profile & Workspace Info in Navbar */}
+        {/* Right: Active User Profile in Navbar */}
         <div className="flex items-center space-x-3">
-          {domain && (
-            <div className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 bg-[#F8F6EC] border border-[#D8D2BC] rounded-xl text-xs font-bold text-[#2D0000]">
-              <span className="text-[#6D0808]">{getDomainIcon()}</span>
-              <span className="capitalize">{domain} Workspace</span>
-            </div>
-          )}
-
           {currentUser && (
-            <div className="flex items-center space-x-2.5 pl-2 sm:border-l sm:border-[#D8D2BC]">
+            <div className="flex items-center space-x-2.5">
               <div className="w-9 h-9 rounded-xl bg-[#6D0808] text-[#EEEAD7] font-extrabold text-xs flex items-center justify-center shadow-sm border border-[#6D0808]/20 shrink-0">
                 {userInitials}
               </div>
               <div className="hidden sm:block text-left leading-tight min-w-0">
-                <p className="text-xs font-bold text-[#2D0000] truncate max-w-[130px] md:max-w-[170px] lg:max-w-[210px]">
+                <p className="text-xs font-bold text-[#2D0000] truncate max-w-[150px] md:max-w-[200px] lg:max-w-[260px]">
                   {currentUser.fullName || currentUser.username}
                 </p>
-                <p className="text-[10px] text-[#757D6F] font-medium truncate max-w-[130px] md:max-w-[170px] lg:max-w-[210px]">
+                <p className="text-[10px] text-[#757D6F] font-medium truncate max-w-[150px] md:max-w-[200px] lg:max-w-[260px]">
                   {currentUser.roleTitle || `@${currentUser.username}`}
                 </p>
               </div>
@@ -87,3 +67,4 @@ export const Navbar = ({ onToggleMobileMenu, isMobileMenuOpen }) => {
     </header>
   );
 };
+
