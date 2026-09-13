@@ -228,14 +228,165 @@ npm run build
  Total Test Cases Executed: 14 Cases
  Execution Outcome:        12 PASSED (85.7%) | 1 FAILED (7.1%) | 1 BLOCKED (7.1%)
  Minimum Requirements Met:
-  ✓ Exact Boundary Cases:    2 Cases (TC-02, TC-06)
-  ✓ Invalid / Error Cases:   2 Cases (TC-04, TC-13)
-  ✓ Manual System-Level:     4 Cases (TC-01, TC-08, TC-09, TC-12)
-  ✓ Genuine Defect Cases:    2 Cases (TC-07 FAILED, TC-11 BLOCKED)
+  ✓ Exact Boundary Cases:    3 Cases (TC-02, TC-07, TC-14) — [Min. 2 Required]
+  ✓ Invalid / Error Cases:   4 Cases (TC-02, TC-05, TC-07, TC-13) — [Min. 2 Required]
+  ✓ Manual System-Level:     8 Cases (TC-01, TC-03, TC-04, TC-06, TC-08, TC-09, TC-10, TC-12) — [Min. 3 Required]
+  ✓ Genuine Defect Cases:    2 Cases (TC-07 FAILED, TC-11 BLOCKED) — [Min. 2 Required]
 ====================================================================================================
 ```
 
-*(Refer to [report/04_FUNCTIONAL_TESTING_AND_TRACEABILITY.md](file:///e:/University/SQE/report/04_FUNCTIONAL_TESTING_AND_TRACEABILITY.md) for full individual precondition, step, and data records for TC-01 through TC-14).*
+#### Test Case TC-01: Valid Supply Request Creation (FR-01)
+- **ID / Title:** `TC-01` &bull; Normal Customer Supply Request Creation
+- **Level / Category:** System-Level / Manual Execution / Workflow Positive Flow
+- **Test Basis / Objective:** FR-01 (SRS 3.2.1.1) &bull; Verify coordinator/customer can register a valid supply request.
+- **Preconditions:** Logged in as `coordinator` on the Coordinator Dashboard.
+- **Test Data:** Customer: `CUST-001 (Ejada IT)`, Item: `ITEM-001 (Dell Server)`, Quantity: `5`, Priority: `High`, Delivery: `2026-10-15`, Supplier: `SUPP-001`.
+- **Steps:** Navigate to *Manage Requests* &rarr; Click *Add New Supply Request* &rarr; Fill fields &rarr; Click *Save Request*.
+- **Expected Result:** Modal closes, toast *"Supply Request registered successfully!"* appears, request appears with status `Assigned`.
+- **Actual Result:** Modal closed, success toast displayed, and request `REQ-2026-006` appeared in table.
+- **Status:** **PASSED** | **Evidence:** Audit log entry `CREATE Request` recorded with latency `14.2ms`.
+
+#### Test Case TC-02: Zero / Negative Quantity Input Rejection (FR-01 Boundary)
+- **ID / Title:** `TC-02` &bull; Rejection of Zero or Negative Quantity on Request Creation
+- **Level / Category:** Boundary Value &bull; Invalid Input / Error Handling
+- **Test Basis / Objective:** FR-01 (SRS 3.2.2.1) &bull; Verify system rejects supply request creation with quantity &le; 0.
+- **Preconditions:** Logged in as `coordinator` on *Manage Requests* page.
+- **Test Data:** Quantity: `0` (and `-5`).
+- **Steps:** Open *Add New Supply Request* modal &rarr; Enter Quantity = `0` &rarr; Click *Save Request*.
+- **Expected Result:** Submission blocked with observable error toast: *"Quantity must be greater than 0."*
+- **Actual Result:** Form submission was blocked; error toast *"Quantity must be greater than 0."* displayed.
+- **Status:** **PASSED** | **Evidence:** Client-side validation intercepted form submission; no database insert occurred.
+
+#### Test Case TC-03: Request Parameter Update & State Transition (FR-01)
+- **ID / Title:** `TC-03` &bull; Coordinator Request Modification and Priority Escalation
+- **Level / Category:** System-Level / Manual Execution / Normal Flow
+- **Test Basis / Objective:** FR-01 (SRS 3.2.5.1) &bull; Verify coordinator can update request priority and delivery date.
+- **Preconditions:** Request `REQ-2026-001` exists in active table.
+- **Test Data:** Request ID: `req-001`, Updated Priority: `Critical`, Notes: *"Expedited client requirement"*.
+- **Steps:** In *Manage Requests*, edit `REQ-2026-001` &rarr; Change Priority to `Critical` &rarr; Click *Update & Dispatch Alert*.
+- **Expected Result:** Table updates priority badge to `Critical` (rose badge) and displays success toast confirming supplier notification.
+- **Actual Result:** Priority updated to `Critical` in real-time, success toast displayed, audit log recorded `UPDATE Request req-001`.
+- **Status:** **PASSED** | **Evidence:** Table row shows red `Critical` badge; notification dispatched to `supp-001`.
+
+#### Test Case TC-04: Enterprise Customer Registration (FR-02 CRUD)
+- **ID / Title:** `TC-04` &bull; Add New Enterprise Customer with Credit Limit
+- **Level / Category:** System-Level / Manual Execution / Normal Positive Flow
+- **Test Basis / Objective:** FR-02 (SRS 3.2.30.1) &bull; Verify coordinator can add a new corporate client.
+- **Preconditions:** Logged in as `coordinator`.
+- **Test Data:** Code: `CUST-006`, Name: `National Water Company`, Contact: `Majed Al-Ghamdi`, Email: `majed@nwc.com.sa`, Limit: `120000.00`.
+- **Steps:** Navigate to *Manage Customers* &rarr; Click *Add New Customer* &rarr; Fill valid data &rarr; Click *Save Customer*.
+- **Expected Result:** Modal closes, customer table reflects `CUST-006` with Active status and credit limit `$120,000.00`.
+- **Actual Result:** Customer `CUST-006` created and visible in directory list.
+- **Status:** **PASSED** | **Evidence:** Audit log `CREATE Customer` logged in telemetry.
+
+#### Test Case TC-05: Referential Integrity Customer Deletion Block (FR-02 Business Rule)
+- **ID / Title:** `TC-05` &bull; Block Customer Deletion with Active Associated Requests
+- **Level / Category:** Business Rule / Error Handling / Referential Integrity
+- **Test Basis / Objective:** FR-02 (SRS 3.2.34.1) &bull; Verify customer cannot be deleted if active open requests reference their ID.
+- **Preconditions:** Customer `CUST-001 (Ejada IT Enterprise)` has active open request `REQ-2026-001`.
+- **Test Data:** Customer ID: `cust-001`.
+- **Steps:** In *Manage Customers* table, locate `CUST-001` &rarr; Click *Delete* &rarr; Confirm prompt.
+- **Expected Result:** Deletion blocked with error toast: *"Cannot delete customer with active open supply requests. Complete or cancel requests first."*
+- **Actual Result:** Deletion intercepted; error toast displayed; customer record remained intact.
+- **Status:** **PASSED** | **Evidence:** Error toast rendered; database customer array length unchanged (5).
+
+#### Test Case TC-06: Catalog Item Creation with Price & Stock (FR-03 CRUD)
+- **ID / Title:** `TC-06` &bull; Add IT Hardware Catalog Item
+- **Level / Category:** System-Level / Normal Flow
+- **Test Basis / Objective:** FR-03 (SRS 3.2.8.1) &bull; Verify adding new item to inventory catalog.
+- **Preconditions:** Logged in as `coordinator`.
+- **Test Data:** Code: `ITEM-007`, Name: `Fortinet FortiGate 100F Firewall`, Category: `Networking`, Price: `4200.00`, Stock: `12`.
+- **Steps:** Navigate to *Manage Items* &rarr; Click *Add New Catalog Item* &rarr; Enter item details &rarr; Click *Save Item*.
+- **Expected Result:** Item is added to catalog table and available for selection in request creation dropdown.
+- **Actual Result:** Item `ITEM-007` registered successfully; displayed with stock count `12 Units`.
+- **Status:** **PASSED** | **Evidence:** Item appears in table and in customer/coordinator request item selector.
+
+#### Test Case TC-07: Supplier Feedback Boundary Quantity Validation (FR-05 GENUINE DEFECT)
+- **ID / Title:** `TC-07` &bull; Supplier Feedback Rejection on Negative / Exceeding Deliverable Quantity
+- **Level / Category:** Boundary Value &bull; Invalid Input / Error Handling &bull; **GENUINE FAILED**
+- **Test Basis / Objective:** FR-05 (SRS 3.2.22.1) &bull; System must validate and reject feedback when deliverable quantity exceeds requested quantity (e.g. 50 units for 5-unit request) or is negative (-5).
+- **Preconditions:** Logged in as `supplier1` (`TechCorp Solutions`). Assigned request `REQ-2026-001` exists with required quantity = `5 Units`.
+- **Test Data:** Request: `REQ-2026-001` (Req Qty: 5), Deliverable Quantity: `50` (or `-5`), Capacity: `Full`, Timeframe: `7` Days.
+- **Steps:** In Supplier Portal, open *Supply Requests* &rarr; Click *Send Feedback* on `REQ-2026-001` &rarr; Enter Deliverable Quantity = `50` &rarr; Click *Submit Supplier Response*.
+- **Expected Result:** System must reject submission with error toast (*"Deliverable quantity cannot exceed requested quantity (5 units) or be less than 1"*).
+- **Actual Result:** **FAILED** &bull; System accepted submission without boundary validation, saved deliverable quantity `50` to `viper_feedbacks`, and updated request status to `In-Review`.
+- **Status:** **FAILED** *(Genuine Baseline Implementation Defect)* | **Evidence:** Storage record contains `deliverableQuantity: 50`. Logged in Jira as **`SCRUM-7`**.
+
+#### Test Case TC-08: Normal Supplier Feedback Submission (FR-05)
+- **ID / Title:** `TC-08` &bull; Valid Supplier Feedback Submission (Partial Capacity)
+- **Level / Category:** System-Level / Manual Execution / Workflow Positive Flow
+- **Test Basis / Objective:** FR-05 (SRS 3.2.22.1) &bull; Verify supplier can submit valid partial fulfillment feedback.
+- **Preconditions:** Logged in as `supplier1`.
+- **Test Data:** Request: `REQ-2026-001` (5 units), Capacity: `Partial`, Deliverable Qty: `3`, Timeframe: `10` days.
+- **Steps:** Open Feedback modal on `REQ-2026-001` &rarr; Set Capacity = `Partial`, Deliverable Qty = `3` &rarr; Click *Submit Supplier Response*.
+- **Expected Result:** Success toast displayed; request status transitions to `In-Review`; coordinator can inspect feedback in details view.
+- **Actual Result:** Feedback saved; coordinator *View Details* modal shows supplier's 3-unit commitment.
+- **Status:** **PASSED** | **Evidence:** Coordinator *View Details* modal renders the submitted feedback block.
+
+#### Test Case TC-09: Request Modification Notification Dispatch (FR-06)
+- **ID / Title:** `TC-09` &bull; Real-time Notification Alert Delivered to Assigned Supplier on Request Edit
+- **Level / Category:** System-Level / Workflow &bull; Integration Flow
+- **Test Basis / Objective:** FR-06 (SRS 3.2.5.1) &bull; Verify assigned supplier receives real-time notification when coordinator updates request.
+- **Preconditions:** Request `REQ-2026-002` is assigned to Supplier `supp-002`.
+- **Test Data:** Change delivery date of `REQ-2026-002` to `2026-10-20`.
+- **Steps:** Log in as `coordinator` &rarr; Edit `REQ-2026-002` date &rarr; Click *Update & Dispatch Alert* &rarr; Switch to Supplier &rarr; Check *Modification Alerts*.
+- **Expected Result:** Supplier inbox displays a new notification titled *"Request REQ-2026-002 Modified"* with unread badge counter in top navbar.
+- **Actual Result:** Notification appeared in supplier inbox with `NEW` badge and timestamp.
+- **Status:** **PASSED** | **Evidence:** Navbar notification bell displayed unread counter `1`; inbox contained alert card.
+
+#### Test Case TC-10: Mark Notification as Read (FR-06)
+- **ID / Title:** `TC-10` &bull; Supplier Acknowledgment of Modification Notification
+- **Level / Category:** Normal Workflow Flow
+- **Test Basis / Objective:** FR-06 &bull; Verify supplier can acknowledge alerts and dismiss unread counter.
+- **Preconditions:** Logged in as `supplier` with at least 1 unread notification.
+- **Steps:** Open *Modification Alerts* page &rarr; Click *Mark as Read* button on the unread alert.
+- **Expected Result:** Notification badge changes from `NEW` to standard; navbar unread count decrements.
+- **Actual Result:** Alert marked as read; navbar badge counter updated.
+- **Status:** **PASSED** | **Evidence:** `isRead: true` updated in notification store.
+
+#### Test Case TC-11: Notification Dispatch on Unassigned Request (FR-06 GENUINE BLOCKER)
+- **ID / Title:** `TC-11` &bull; Notification Pipeline Execution on Unassigned Request Edit
+- **Level / Category:** Workflow / Dependency &bull; **GENUINE BLOCKED**
+- **Test Basis / Objective:** FR-06 (SRS 3.2.5.1 / SRS 3.2.6.1) &bull; Verify notification channel handling when coordinator edits an unassigned request.
+- **Preconditions:** Request `REQ-2026-003` has `assignedSupplierId: null` (unassigned procurement request).
+- **Test Data:** Request ID: `req-003`, Assigned Supplier: `None`.
+- **Steps:** As Coordinator, edit `REQ-2026-003` &rarr; Change Priority to `High` &rarr; Click *Update & Dispatch Alert* &rarr; Check notification log.
+- **Expected Result:** System should either prompt to assign a supplier or route the alert to an unassigned operational queue, successfully delivering the alert.
+- **Actual Result:** **BLOCKED** &bull; Notification pipeline requires non-null `supplierId` foreign key. Because `assignedSupplierId` is null, notification creation is bypassed/blocked, preventing delivery to any stakeholder.
+- **Status:** **BLOCKED** *(Genuine Baseline Dependency Blocker)* | **Evidence:** Console warning: `[FR-06 Notification Skipped] Request REQ-2026-003 has no assigned supplier...`. Logged in Jira as **`SCRUM-8`**.
+
+#### Test Case TC-12: Domain-Based Authentication & Portal Routing (FR-04)
+- **ID / Title:** `TC-12` &bull; Correct Authentication and Role Portal Routing
+- **Level / Category:** System-Level / Business Rule / Normal Flow
+- **Test Basis / Objective:** FR-04 (SRS 3.1.1.1) &bull; Verify valid credentials and domain choice route to correct dashboard.
+- **Preconditions:** User is logged out on `/login`.
+- **Test Data:** Username: `coordinator`, Password: `admin123`, Domain: `coordinator`.
+- **Steps:** On login screen, enter credentials &rarr; Select Domain `coordinator` &rarr; Click *Send & Authenticate*.
+- **Expected Result:** User is authenticated and routed to the Coordinator Operations Overview dashboard.
+- **Actual Result:** Coordinator Dashboard rendered immediately with active session in `sessionStorage`.
+- **Status:** **PASSED** | **Evidence:** Audit log recorded `AUTH_SUCCESS` in `16.8ms`.
+
+#### Test Case TC-13: Invalid Credentials Error Redirection (FR-07)
+- **ID / Title:** `TC-13` &bull; Redirection to SRS 3.1.1.1 Error Page on Invalid Password
+- **Level / Category:** Invalid Input / Error Handling / Negative Security Flow
+- **Test Basis / Objective:** FR-07 (SRS 3.1.1.1) &bull; Verify system redirects to dedicated error view upon wrong credentials.
+- **Preconditions:** User is on `/login`.
+- **Test Data:** Username: `coordinator`, Password: `wrongpassword999`, Domain: `coordinator`.
+- **Steps:** Enter username `coordinator` and invalid password `wrongpassword999` &rarr; Click *Send & Authenticate*.
+- **Expected Result:** System redirects to dedicated Error View containing `[ Try again ]` link per SRS 3.1.1.1.
+- **Actual Result:** Redirection to `LoginError` screen occurred; displayed *"Authentication Failed"* and `[ Try again ]` button.
+- **Status:** **PASSED** | **Evidence:** Screen rendered with `FR-07 Authentication Exception` header; audit log recorded `AUTH_FAILED`.
+
+#### Test Case TC-14: Domain Mismatch Security Interception (FR-04 / FR-07)
+- **ID / Title:** `TC-14` &bull; Interception of Valid Credentials with Mismatched Domain
+- **Level / Category:** Boundary & Error Handling / Security Rule
+- **Test Basis / Objective:** FR-04 / FR-07 &bull; Verify user attempting to log into a different domain is redirected to error screen.
+- **Preconditions:** User is on `/login`.
+- **Test Data:** Username: `supplier1` (Supplier account), Password: `supp123`, Domain: `coordinator` (Wrong domain selected).
+- **Steps:** Enter username `supplier1`, password `supp123`, but select Domain = `coordinator` &rarr; Click *Send & Authenticate*.
+- **Expected Result:** System intercepts domain mismatch and routes to error screen without authenticating session.
+- **Actual Result:** Redirected to `LoginError` with specific domain mismatch guidance.
+- **Status:** **PASSED** | **Evidence:** Audit log recorded `DOMAIN_MISMATCH` for user `supplier1`.
 
 ---
 
