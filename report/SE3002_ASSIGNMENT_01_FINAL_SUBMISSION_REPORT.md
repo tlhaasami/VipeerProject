@@ -264,19 +264,19 @@ npm run build
 
 ### 4.1 Confirmed Jira Defect Records
 
-![Jira Kanban Board Defect Evidence](./assets/jira_defect_board.jpg)
+![Jira Kanban Board Defect Evidence](./assets/jira_defect_board.png)
 
-#### Jira Defect 1: `VIPER-BUG-01`
-- **Issue Key:** `VIPER-BUG-01`
+#### Jira Defect 1: `SCRUM-7` (VIPER-BUG-01)
+- **Issue Key:** `SCRUM-7` (`VIPER-BUG-01`)
 - **Summary:** Supplier feedback submission form lacks upper and lower boundary validation on deliverable quantity
-- **Severity:** Major | **Priority:** High | **Status:** Open (To Do) | **Related Test Case:** `TC-07` (**FAILED**)
+- **Severity:** Major | **Priority:** High | **Status:** Open / To Do | **Related Test Case:** `TC-07` (**FAILED**)
 - **Reproduction:** In Supplier feedback modal on 5-unit request, entering `50` or `-5` is saved to storage without boundary error.
 - **Evidence:** Storage record contains `deliverableQuantity: 50` for 5-unit order.
 
-#### Jira Defect 2: `VIPER-BUG-02`
-- **Issue Key:** `VIPER-BUG-02`
+#### Jira Defect 2: `SCRUM-8` (VIPER-BUG-02)
+- **Issue Key:** `SCRUM-8` (`VIPER-BUG-02`)
 - **Summary:** Notification pipeline execution is blocked when Coordinator modifies an unassigned supply request
-- **Severity:** Medium | **Priority:** Medium | **Status:** Open (To Do) | **Related Test Case:** `TC-11` (**BLOCKED**)
+- **Severity:** Medium | **Priority:** Medium | **Status:** Open / To Do | **Related Test Case:** `TC-11` (**BLOCKED**)
 - **Reproduction:** Editing priority on unassigned order `REQ-2026-003` halts notification stream due to missing `supplierId` foreign key.
 - **Evidence:** Console log `[FR-06 Notification Skipped] Request has no assigned supplier.`
 
