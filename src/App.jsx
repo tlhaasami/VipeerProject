@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './components/NotificationToast';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -37,6 +37,30 @@ const MainLayout = () => {
   const [currentView, setCurrentView] = useState('dashboard');
   const [loginErrorState, setLoginErrorState] = useState(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [urlPath, setUrlPath] = useState(() => window.location.pathname);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setUrlPath(window.location.pathname);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const handleGoHome = () => {
+    window.history.pushState({}, '', '/');
+    setUrlPath('/');
+    setCurrentView('dashboard');
+  };
+
+  const is404 =
+    (urlPath !== '/' && urlPath !== '' && urlPath !== '/index.html') ||
+    currentView === '404';
+
+  // If 404 Error state (Standalone Full-Screen Page)
+  if (is404) {
+    return <NotFound404 onGoHome={handleGoHome} />;
+  }
 
   // If not authenticated
   if (!isAuthenticated) {
@@ -56,11 +80,6 @@ const MainLayout = () => {
         }
       />
     );
-  }
-
-  // If 404 Error state
-  if (currentView === '404') {
-    return <NotFound404 onGoHome={() => setCurrentView('dashboard')} />;
   }
 
   // Render view based on domain and currentView
