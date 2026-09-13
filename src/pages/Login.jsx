@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Layers, Shield, ArrowRight, UserCheck, Key, Compass, Building2, Truck, Users, ChevronDown, Check } from 'lucide-react';
+import { Layers, Shield, ArrowRight, UserCheck, Key, Compass, Building2, Truck, Users, ChevronDown, Check, Eye, EyeOff } from 'lucide-react';
 
 export const Login = ({ onLoginError }) => {
   const { login, loading } = useAuth();
   const [username, setUsername] = useState('coordinator');
   const [password, setPassword] = useState('admin123');
+  const [showPassword, setShowPassword] = useState(false);
   const [domain, setDomain] = useState('coordinator');
   const [domainDropdownOpen, setDomainDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -115,13 +116,21 @@ export const Login = ({ onLoginError }) => {
                   <Key className="w-4 h-4" />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter password"
-                  className="w-full pl-10 pr-4 py-2.5 bg-[#F8F6EC] border border-[#D8D2BC] rounded-xl text-sm text-[#2D0000] placeholder-[#757D6F] focus:outline-none focus:border-[#6D0808] focus:ring-1 focus:ring-[#6D0808] transition-all font-medium"
+                  className="w-full pl-10 pr-11 py-2.5 bg-[#F8F6EC] border border-[#D8D2BC] rounded-xl text-sm text-[#2D0000] placeholder-[#757D6F] focus:outline-none focus:border-[#6D0808] focus:ring-1 focus:ring-[#6D0808] transition-all font-medium"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#757D6F] hover:text-[#6D0808] transition-colors cursor-pointer"
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 

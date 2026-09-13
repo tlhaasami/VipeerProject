@@ -9,6 +9,7 @@ import { Sidebar } from './components/Sidebar';
 import { Login } from './pages/Login';
 import { LoginError } from './pages/LoginError';
 import { CoordinatorDashboard } from './pages/coordinator/CoordinatorDashboard';
+import { ManageUsers } from './pages/coordinator/ManageUsers';
 import { ManageRequests } from './pages/coordinator/ManageRequests';
 import { ManageCustomers } from './pages/coordinator/ManageCustomers';
 import { ManageItems } from './pages/coordinator/ManageItems';
@@ -59,6 +60,8 @@ const MainLayout = () => {
   const renderViewContent = () => {
     if (domain === 'coordinator') {
       switch (currentView) {
+        case 'users':
+          return <ManageUsers />;
         case 'requests':
           return <ManageRequests />;
         case 'customers':

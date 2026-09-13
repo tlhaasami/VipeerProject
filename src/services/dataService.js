@@ -540,6 +540,120 @@ export const dataService = {
     return true;
   },
 
+  // User & Staff Management (Admin Panel)
+  async getUsers() {
+    const startTime = performance.now();
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (!error && data && data.length > 0) {
+          const list = data.map(u => ({
+            id: u.id,
+            username: u.username,
+            fullName: u.full_name || u.fullName,
+            email: u.email,
+            domain: u.domain,
+            roleTitle: u.role_title || u.roleTitle || `${u.domain.toUpperCase()} Account`,
+            createdAt: u.created_at || u.createdAt
+          }));
+          logTransaction('GET_USERS_SUPABASE', 'User', 'all', startTime, list, 'coordinator');
+          return list;
+        }
+      } catch (err) {
+        console.warn('Supabase getUsers fallback:', err);
+      }
+    }
+    const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+    logTransaction('GET_ALL', 'Users', 'all', startTime, users, 'coordinator');
+    return users;
+  },
+
+  async addUser(userData) {
+    const startTime = performance.now();
+    const newUser = {
+      id: 'user-' + String(Date.now()).slice(-6),
+      username: userData.username.trim().toLowerCase(),
+      password: userData.password,
+      domain: userData.domain,
+      fullName: userData.fullName.trim(),
+      email: userData.email.trim().toLowerCase(),
+      roleTitle: userData.roleTitle || `${userData.domain.toUpperCase()} Specialist`,
+      createdAt: new Date().toISOString()
+    };
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data, error } = await supabase.from('users').insert([{
+          username: newUser.username,
+          password_hash: newUser.password,
+          domain: newUser.domain,
+          full_name: newUser.fullName,
+          email: newUser.email,
+          role_title: newUser.roleTitle
+        }]).select();
+        if (!error && data && data[0]) {
+          newUser.id = data[0].id;
+        }
+      } catch (err) {
+        console.warn('Supabase addUser fallback:', err);
+      }
+    }
+
+    const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+    users.unshift(newUser);
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+
+    logTransaction('CREATE_USER', 'User', newUser.id, startTime, newUser, 'coordinator');
+    return newUser;
+  },
+
+  async updateUser(id, userData) {
+    const startTime = performance.now();
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('users').update({
+          full_name: userData.fullName,
+          email: userData.email,
+          role_title: userData.roleTitle,
+          domain: userData.domain,
+          ...(userData.password ? { password_hash: userData.password } : {})
+        }).eq('id', id);
+      } catch (err) {
+        console.warn('Supabase updateUser fallback:', err);
+      }
+    }
+
+    const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+    const index = users.findIndex(u => u.id === id || u.username === userData.username);
+    if (index !== -1) {
+      users[index] = { ...users[index], ...userData };
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    }
+    logTransaction('UPDATE_USER', 'User', id, startTime, userData, 'coordinator');
+    return true;
+  },
+
+  async deleteUser(id, username) {
+    const startTime = performance.now();
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('users').delete().eq('id', id);
+      } catch (err) {
+        console.warn('Supabase deleteUser fallback:', err);
+      }
+    }
+
+    let users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+    users = users.filter(u => u.id !== id && u.username !== username);
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+
+    logTransaction('DELETE_USER', 'User', id, startTime, { id, username }, 'coordinator');
+    return true;
+  },
+
   // Audit Logs & NFR-01 Performance Benchmark
   getAuditLogs() {
     return JSON.parse(localStorage.getItem(STORAGE_KEYS.LOGS) || '[]');

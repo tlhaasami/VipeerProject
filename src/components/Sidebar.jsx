@@ -19,7 +19,8 @@ import {
   FileText,
   Navigation,
   FileCheck,
-  Boxes
+  Boxes,
+  UserCog
 } from 'lucide-react';
 
 export const Sidebar = ({ currentView, onNavigate }) => {
@@ -31,6 +32,7 @@ export const Sidebar = ({ currentView, onNavigate }) => {
       case 'coordinator':
         return [
           { id: 'dashboard', label: 'Dashboard Overview', icon: LayoutDashboard },
+          { id: 'users', label: 'User & Access Admin', icon: UserCog },
           { id: 'requests', label: 'Supply Requests', icon: ClipboardList },
           { id: 'customers', label: 'Client Directory', icon: Users },
           { id: 'items', label: 'Product Catalog', icon: Package },
