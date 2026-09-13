@@ -77,10 +77,6 @@ export const Login = ({ onLoginError }) => {
           <p className="text-[#757D6F] text-xs mt-1 font-medium">
             Ejada Supply Chain Management Platform
           </p>
-          <div className="inline-flex items-center space-x-1.5 mt-2 bg-[#6D0808]/10 border border-[#6D0808]/25 px-3 py-1 rounded-full text-[11px] text-[#6D0808] font-semibold">
-            <Shield className="w-3.5 h-3.5" />
-            <span>Secure Enterprise Authentication</span>
-          </div>
         </div>
 
         {/* Login Box */}
