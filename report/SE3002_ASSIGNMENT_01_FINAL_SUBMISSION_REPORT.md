@@ -108,6 +108,8 @@ npm run build
 
 ### 3.1 Complete Codebase SonarQube Scan Evidence
 
+![SonarQube Project Dashboard](./assets/sonarqube_dashboard.jpg)
+
 ```text
 ====================================================================================================
                         SONARQUBE COMMUNITY BUILD - PROJECT QUALITY GATE STATUS
@@ -261,6 +263,8 @@ npm run build
 # PART 4: Defect Reporting & Final Quality Judgment (15 Marks)
 
 ### 4.1 Confirmed Jira Defect Records
+
+![Jira Kanban Board Defect Evidence](./assets/jira_defect_board.jpg)
 
 #### Jira Defect 1: `VIPER-BUG-01`
 - **Issue Key:** `VIPER-BUG-01`
