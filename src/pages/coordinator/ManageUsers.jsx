@@ -13,7 +13,7 @@ import {
   X,
   ChevronDown,
   Check,
-  UserCheck
+  Filter
 } from 'lucide-react';
 
 export const ManageUsers = () => {
@@ -28,6 +28,10 @@ export const ManageUsers = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentUserToEdit, setCurrentUserToEdit] = useState(null);
   const [userToDelete, setUserToDelete] = useState(null);
+
+  // Responsive Domain Filter Dropdown State (for compact viewports)
+  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
+  const filterDropdownRef = useRef(null);
 
   // Custom Dropdown State for Add Modal
   const [addDomainDropdownOpen, setAddDomainDropdownOpen] = useState(false);
@@ -74,6 +78,9 @@ export const ManageUsers = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target)) {
+        setFilterDropdownOpen(false);
+      }
       if (addDropdownRef.current && !addDropdownRef.current.contains(event.target)) {
         setAddDomainDropdownOpen(false);
       }
@@ -191,6 +198,16 @@ export const ManageUsers = () => {
   const suppCount = users.filter((u) => u.domain === 'supplier').length;
   const custCount = users.filter((u) => u.domain === 'customer').length;
 
+  const filterTabsList = [
+    { id: 'all', label: 'All Users', count: users.length },
+    { id: 'coordinator', label: 'Coordinators', count: coordCount },
+    { id: 'supplier', label: 'Suppliers', count: suppCount },
+    { id: 'customer', label: 'Customers', count: custCount }
+  ];
+
+  const currentFilterTab =
+    filterTabsList.find((t) => t.id === selectedDomainFilter) || filterTabsList[0];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -252,16 +269,11 @@ export const ManageUsers = () => {
         </div>
       </div>
 
-      {/* Filters & Search Toolbar */}
-      <div className="bg-white border border-[#D8D2BC] rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        {/* Domain Tabs */}
-        <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {[
-            { id: 'all', label: 'All Users', count: users.length },
-            { id: 'coordinator', label: 'Coordinators', count: coordCount },
-            { id: 'supplier', label: 'Suppliers', count: suppCount },
-            { id: 'customer', label: 'Customers', count: custCount }
-          ].map((tab) => (
+      {/* Responsive Filters & Search Toolbar */}
+      <div className="bg-white border border-[#D8D2BC] rounded-2xl p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3.5">
+        {/* Desktop Domain Tabs (Shows on wide screens where they fit completely) */}
+        <div className="hidden lg:flex items-center space-x-1.5 flex-wrap gap-y-1.5">
+          {filterTabsList.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setSelectedDomainFilter(tab.id)}
@@ -272,13 +284,74 @@ export const ManageUsers = () => {
               }`}
             >
               <span>{tab.label}</span>
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                selectedDomainFilter === tab.id ? 'bg-white/20 text-[#EEEAD7]' : 'bg-black/5 text-[#757D6F]'
-              }`}>
+              <span
+                className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                  selectedDomainFilter === tab.id
+                    ? 'bg-white/20 text-[#EEEAD7]'
+                    : 'bg-black/5 text-[#757D6F]'
+                }`}
+              >
                 {tab.count}
               </span>
             </button>
           ))}
+        </div>
+
+        {/* Compact Viewport Filter Dropdown (Automatically used when horizontal space is constrained) */}
+        <div className="lg:hidden w-full sm:w-auto relative" ref={filterDropdownRef}>
+          <button
+            type="button"
+            onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
+            className="w-full sm:w-64 px-3.5 py-2 bg-[#F8F6EC] border border-[#D8D2BC] rounded-xl text-xs text-[#2D0000] flex items-center justify-between font-bold hover:border-[#6D0808] transition-all cursor-pointer shadow-xs"
+          >
+            <div className="flex items-center space-x-2 truncate">
+              <Filter className="w-3.5 h-3.5 text-[#6D0808] shrink-0" />
+              <span className="text-[#757D6F] font-medium">Domain:</span>
+              <span className="truncate">{currentFilterTab.label}</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-[#6D0808]/10 text-[#6D0808] font-bold shrink-0">
+                {currentFilterTab.count}
+              </span>
+            </div>
+            <ChevronDown
+              className={`w-4 h-4 text-[#757D6F] transition-transform duration-200 ml-2 shrink-0 ${
+                filterDropdownOpen ? 'rotate-180 text-[#6D0808]' : ''
+              }`}
+            />
+          </button>
+
+          {filterDropdownOpen && (
+            <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-[#D8D2BC] rounded-xl shadow-xl z-30 overflow-hidden py-1 animate-in fade-in duration-150">
+              {filterTabsList.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedDomainFilter(tab.id);
+                    setFilterDropdownOpen(false);
+                  }}
+                  className={`w-full px-3.5 py-2.5 flex items-center justify-between text-left text-xs font-semibold transition-colors cursor-pointer ${
+                    selectedDomainFilter === tab.id
+                      ? 'bg-[#6D0808] text-[#EEEAD7]'
+                      : 'text-[#2D0000] hover:bg-[#F8F6EC]'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  <div className="flex items-center space-x-2">
+                    <span
+                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        selectedDomainFilter === tab.id
+                          ? 'bg-white/20 text-[#EEEAD7]'
+                          : 'bg-[#F8F6EC] text-[#757D6F]'
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                    {selectedDomainFilter === tab.id && <Check className="w-3.5 h-3.5 text-[#EEEAD7]" />}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Search Input */}
