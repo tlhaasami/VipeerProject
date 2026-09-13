@@ -6,7 +6,6 @@ import {
   Trophy,
   Play,
   Layers,
-  AlertTriangle,
   Package,
   ArrowLeft,
   Volume2,
@@ -14,7 +13,7 @@ import {
   Sparkles
 } from 'lucide-react';
 
-// Helper for ultra-safe rounded rectangle drawing across all browser versions
+// Cross-browser safe rounded rectangle drawing
 const drawSafeRoundedRect = (ctx, x, y, width, height, radius, fillStyle, strokeStyle, lineWidth = 1) => {
   ctx.save();
   ctx.beginPath();
@@ -54,7 +53,13 @@ export const NotFound404 = ({ onGoHome }) => {
     return parseInt(localStorage.getItem('viper_runner_highscore') || '0', 10);
   });
 
+  const gameStateRef = useRef('IDLE');
   const audioCtxRef = useRef(null);
+
+  // Sync state to ref for stable loop access
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
 
   // Web Audio Synthesizer for retro SCM sound effects
   const playSound = useCallback((type) => {
@@ -67,10 +72,10 @@ export const NotFound404 = ({ onGoHome }) => {
         }
       }
       const ctx = audioCtxRef.current;
-      if (!ctx || ctx.state === 'suspended') {
-        ctx?.resume();
-      }
       if (!ctx) return;
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
 
       const now = ctx.currentTime;
       const osc = ctx.createOscillator();
@@ -81,30 +86,30 @@ export const NotFound404 = ({ onGoHome }) => {
       if (type === 'jump') {
         // Cheerful bounce sweep
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(220, now);
-        osc.frequency.exponentialRampToValueAtTime(580, now + 0.15);
+        osc.frequency.setValueAtTime(240, now);
+        osc.frequency.exponentialRampToValueAtTime(600, now + 0.12);
         gain.gain.setValueAtTime(0.18, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
         osc.start(now);
-        osc.stop(now + 0.15);
+        osc.stop(now + 0.12);
       } else if (type === 'score') {
         // Milestone coin chime
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(587.33, now); // D5
-        osc.frequency.setValueAtTime(880, now + 0.08); // A5
+        osc.frequency.setValueAtTime(587.33, now);
+        osc.frequency.setValueAtTime(880, now + 0.08);
         gain.gain.setValueAtTime(0.2, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.22);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
         osc.start(now);
-        osc.stop(now + 0.22);
+        osc.stop(now + 0.2);
       } else if (type === 'crash') {
-        // Crunchy impact buzz
+        // Impact collision buzz
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(160, now);
-        osc.frequency.linearRampToValueAtTime(40, now + 0.28);
+        osc.frequency.linearRampToValueAtTime(40, now + 0.25);
         gain.gain.setValueAtTime(0.25, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.28);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
         osc.start(now);
-        osc.stop(now + 0.28);
+        osc.stop(now + 0.25);
       }
     } catch {
       // Audio autoplay policy fallback
@@ -140,7 +145,7 @@ export const NotFound404 = ({ onGoHome }) => {
   });
 
   // Safe draw scene caller
-  const renderFrame = useCallback((isGameOver = false) => {
+  const renderFrame = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -227,7 +232,6 @@ export const NotFound404 = ({ onGoHome }) => {
       if (obs.type === 'box') {
         // Cargo Delivery Crate
         drawSafeRoundedRect(ctx, obs.x, obs.y, obs.width, obs.height, 3, '#D8D2BC', '#757D6F', 1.5);
-        // Diagonal Tape
         ctx.strokeStyle = '#6D0808';
         ctx.lineWidth = 2;
         ctx.beginPath();
@@ -238,7 +242,7 @@ export const NotFound404 = ({ onGoHome }) => {
         ctx.stroke();
       } else if (obs.type === 'cone') {
         // Highway Traffic Safety Cone
-        ctx.fillStyle = '#EA580C'; // Bright Orange
+        ctx.fillStyle = '#EA580C';
         ctx.beginPath();
         ctx.moveTo(obs.x + obs.width / 2, obs.y);
         ctx.lineTo(obs.x + obs.width, obs.y + obs.height);
@@ -246,7 +250,6 @@ export const NotFound404 = ({ onGoHome }) => {
         ctx.closePath();
         ctx.fill();
 
-        // White reflective bands on cone
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(obs.x + 4, obs.y + 12, obs.width - 8, 4);
         ctx.fillRect(obs.x + 6, obs.y + 6, obs.width - 12, 3);
@@ -254,20 +257,15 @@ export const NotFound404 = ({ onGoHome }) => {
         // Ejada High-Tech Data Rack
         drawSafeRoundedRect(ctx, obs.x, obs.y, obs.width, obs.height, 3, '#2D0000', '#6D0808', 1);
 
-        // Blinking Status LEDs
-        ctx.fillStyle = '#10B981'; // Green LED
+        ctx.fillStyle = '#10B981';
         ctx.fillRect(obs.x + 3, obs.y + 4, 3, 3);
-        ctx.fillStyle = g.frame % 30 < 15 ? '#EF4444' : '#6D0808'; // Pulsing Red Alert LED
+        ctx.fillStyle = g.frame % 30 < 15 ? '#EF4444' : '#6D0808';
         ctx.fillRect(obs.x + 8, obs.y + 4, 3, 3);
 
-        // Server slot lines
         ctx.fillStyle = '#757D6F';
         ctx.fillRect(obs.x + 3, obs.y + 12, obs.width - 6, 2);
         ctx.fillRect(obs.x + 3, obs.y + 19, obs.width - 6, 2);
         ctx.fillRect(obs.x + 3, obs.y + 26, obs.width - 6, 2);
-        if (obs.height > 34) {
-          ctx.fillRect(obs.x + 3, obs.y + 33, obs.width - 6, 2);
-        }
       }
       ctx.restore();
     });
@@ -276,15 +274,15 @@ export const NotFound404 = ({ onGoHome }) => {
     const t = g.truck;
     ctx.save();
 
-    // Truck Cargo Container (Ejada Burgundy #6D0808)
+    // Truck Cargo Container
     drawSafeRoundedRect(ctx, t.x, t.y, t.width - 14, t.height - 6, 3, '#6D0808');
 
-    // VIPER SCM White Stamp on Cargo
+    // VIPER SCM Stamp
     ctx.fillStyle = '#EEEAD7';
     ctx.font = 'bold 8px monospace';
     ctx.fillText('VIPER', t.x + 5, t.y + 14);
 
-    // Truck Driver Cabin (#2D0000)
+    // Truck Driver Cabin
     drawSafeRoundedRect(ctx, t.x + t.width - 16, t.y + 6, 16, t.height - 12, 2, '#2D0000');
 
     // Windshield
@@ -306,17 +304,14 @@ export const NotFound404 = ({ onGoHome }) => {
       ctx.save();
       ctx.translate(wx, wy);
       ctx.rotate(t.wheelAngle);
-      // Outer Tire
       ctx.fillStyle = '#1A1A1A';
       ctx.beginPath();
       ctx.arc(0, 0, 5.5, 0, Math.PI * 2);
       ctx.fill();
-      // Silver Rim
       ctx.fillStyle = '#EEEAD7';
       ctx.beginPath();
       ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
       ctx.fill();
-      // Tread line
       ctx.strokeStyle = '#757D6F';
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -342,31 +337,10 @@ export const NotFound404 = ({ onGoHome }) => {
 
   // Initial mount render
   useEffect(() => {
-    const timer = setTimeout(() => {
-      renderFrame(false);
-    }, 50);
-    return () => clearTimeout(timer);
+    renderFrame();
   }, [renderFrame]);
 
-  // Keyboard controls
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
-        e.preventDefault();
-        handleAction();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      if (gameRef.current.animationId) {
-        cancelAnimationFrame(gameRef.current.animationId);
-      }
-    };
-  }, [gameState]);
-
-  const jump = () => {
+  const jump = useCallback(() => {
     const g = gameRef.current;
     if (g.truck.isGrounded) {
       g.truck.vy = g.jumpForce;
@@ -386,52 +360,16 @@ export const NotFound404 = ({ onGoHome }) => {
         });
       }
     }
-  };
+  }, [playSound]);
 
-  const startGame = () => {
-    const g = gameRef.current;
-    g.truck = {
-      x: 50,
-      y: 135,
-      width: 52,
-      height: 30,
-      vy: 0,
-      isGrounded: true,
-      wheelAngle: 0
-    };
-    g.obstacles = [];
-    g.clouds = [
-      { x: 120, y: 30, width: 45, speed: 0.6 },
-      { x: 380, y: 22, width: 65, speed: 0.4 },
-      { x: 620, y: 38, width: 50, speed: 0.55 }
-    ];
-    g.particles = [];
-    g.roadOffset = 0;
-    g.speed = 5.8;
-    g.score = 0;
-    g.frame = 0;
-
-    setScore(0);
-    setGameState('PLAYING');
-
-    if (g.animationId) cancelAnimationFrame(g.animationId);
-    runGameLoop();
-  };
-
-  const handleAction = () => {
-    if (gameState === 'IDLE' || gameState === 'GAMEOVER') {
-      startGame();
-    } else if (gameState === 'PLAYING') {
-      jump();
-    }
-  };
-
-  const runGameLoop = () => {
+  const runGameLoop = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const g = gameRef.current;
 
     const loop = () => {
+      if (gameStateRef.current !== 'PLAYING') return;
+
       g.frame++;
 
       // 1. Update Physics
@@ -465,7 +403,6 @@ export const NotFound404 = ({ onGoHome }) => {
         g.score++;
         setScore(g.score);
 
-        // Milestone audio chime
         if (g.score > 0 && g.score % 100 === 0) {
           playSound('score');
         }
@@ -521,7 +458,6 @@ export const NotFound404 = ({ onGoHome }) => {
         const obs = g.obstacles[i];
         obs.x -= g.speed;
 
-        // Collision Check (AABB with 5px padding tolerance)
         const pad = 5;
         if (
           g.truck.x + pad < obs.x + obs.width - pad &&
@@ -531,6 +467,7 @@ export const NotFound404 = ({ onGoHome }) => {
         ) {
           // Collision Detected!
           playSound('crash');
+          gameStateRef.current = 'GAMEOVER';
           setGameState('GAMEOVER');
 
           // Spawn crash debris particles
@@ -550,7 +487,7 @@ export const NotFound404 = ({ onGoHome }) => {
             setHighScore(g.score);
             localStorage.setItem('viper_runner_highscore', String(g.score));
           }
-          renderFrame(true);
+          renderFrame();
           return;
         }
 
@@ -560,12 +497,74 @@ export const NotFound404 = ({ onGoHome }) => {
       }
 
       // 5. Render Scene
-      renderFrame(false);
+      renderFrame();
       g.animationId = requestAnimationFrame(loop);
     };
 
     g.animationId = requestAnimationFrame(loop);
-  };
+  }, [highScore, playSound, renderFrame]);
+
+  const startGame = useCallback(() => {
+    const g = gameRef.current;
+    g.truck = {
+      x: 50,
+      y: 135,
+      width: 52,
+      height: 30,
+      vy: 0,
+      isGrounded: true,
+      wheelAngle: 0
+    };
+    g.obstacles = [];
+    g.clouds = [
+      { x: 120, y: 30, width: 45, speed: 0.6 },
+      { x: 380, y: 22, width: 65, speed: 0.4 },
+      { x: 620, y: 38, width: 50, speed: 0.55 }
+    ];
+    g.particles = [];
+    g.roadOffset = 0;
+    g.speed = 5.8;
+    g.score = 0;
+    g.frame = 0;
+
+    setScore(0);
+    gameStateRef.current = 'PLAYING';
+    setGameState('PLAYING');
+
+    if (g.animationId) cancelAnimationFrame(g.animationId);
+    runGameLoop();
+  }, [runGameLoop]);
+
+  const handleAction = useCallback(() => {
+    if (gameStateRef.current === 'IDLE' || gameStateRef.current === 'GAMEOVER') {
+      startGame();
+    } else if (gameStateRef.current === 'PLAYING') {
+      jump();
+    }
+  }, [startGame, jump]);
+
+  // Stable Keyboard event listener (never cancels animation loop!)
+  const handleActionRef = useRef(handleAction);
+  useEffect(() => {
+    handleActionRef.current = handleAction;
+  }, [handleAction]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+        e.preventDefault();
+        handleActionRef.current();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (gameRef.current.animationId) {
+        cancelAnimationFrame(gameRef.current.animationId);
+      }
+    };
+  }, []); // Only run once on mount
 
   return (
     <div className="min-h-screen bg-[#EEEAD7] text-[#2D0000] flex flex-col justify-between p-3.5 sm:p-6 lg:p-8 font-sans selection:bg-[#6D0808] selection:text-[#EEEAD7]">
@@ -593,13 +592,9 @@ export const NotFound404 = ({ onGoHome }) => {
 
       {/* Standalone 404 & Game Centerpiece */}
       <main className="max-w-4xl w-full mx-auto my-auto py-6 space-y-6">
-        {/* 404 Alert Banner */}
+        {/* 404 Header Banner (Pill removed per user request) */}
         <div className="bg-white border border-[#D8D2BC] rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="space-y-2 text-center sm:text-left">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 bg-[#6D0808]/10 border border-[#6D0808]/20 rounded-full text-xs font-extrabold text-[#6D0808]">
-              <AlertTriangle className="w-3.5 h-3.5" />
-              <span>ERROR 404 &bull; SUPPLY ROUTE DISCONNECTED</span>
-            </div>
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[#2D0000]">
               Manifest Not Found
             </h1>
@@ -672,7 +667,7 @@ export const NotFound404 = ({ onGoHome }) => {
                 <div className="w-12 h-12 rounded-2xl bg-[#6D0808] text-[#EEEAD7] flex items-center justify-center shadow-xl mb-2.5 group-hover:scale-110 transition-transform">
                   <Play className="w-6 h-6 ml-0.5" />
                 </div>
-                <p className="text-sm font-black text-white drop-shadow-md">Click or Press SPACE to Start Delivery Run</p>
+                <p className="text-sm font-black text-white drop-shadow-md">Click Canvas or Press SPACE to Start Run</p>
                 <p className="text-xs text-[#EEEAD7] mt-1 font-medium drop-shadow">Use SPACEBAR, UP ARROW, or Tap anywhere to jump</p>
               </div>
             )}
@@ -710,10 +705,10 @@ export const NotFound404 = ({ onGoHome }) => {
 
             <button
               onClick={handleAction}
-              className="sm:hidden w-full py-2.5 rounded-xl bg-[#6D0808] text-[#EEEAD7] font-bold text-xs flex items-center justify-center space-x-2 shadow-sm active:scale-95"
+              className="px-4 py-2 rounded-xl bg-[#6D0808] hover:bg-[#2D0000] text-[#EEEAD7] font-bold text-xs flex items-center justify-center space-x-2 shadow-sm active:scale-95 cursor-pointer"
             >
               <Sparkles className="w-4 h-4" />
-              <span>{gameState === 'PLAYING' ? 'TAP TO JUMP TRUCK' : 'START GAME'}</span>
+              <span>{gameState === 'PLAYING' ? 'JUMP TRUCK' : 'START GAME'}</span>
             </button>
 
             <p className="font-medium hidden sm:block">SCM Logistics Highway Simulator &bull; 60 FPS Engine</p>
