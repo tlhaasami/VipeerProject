@@ -50,13 +50,13 @@
 ### Jira Tickets Summary Table:
 | Issue Key | Summary / Title | Severity | Priority | Status | Related Test Case | Defect Classification |
 | :---: | :--- | :---: | :---: | :---: | :---: | :---: |
-| **VIPER-BUG-01** | `[FR-05]` Supplier feedback accepts exceeding / negative quantity without validation | **Major** | **High** | `To Do` / `Open` | `TC-07` (**FAILED**) | Implementation Boundary Defect |
-| **VIPER-BUG-02** | `[FR-06]` Notification pipeline execution blocked when editing unassigned request | **Medium** | **Medium** | `To Do` / `Open` | `TC-11` (**BLOCKED**) | Architecture Dependency Blocker |
+| **SCRUM-7** | `[FR-05]` Supplier feedback accepts exceeding deliverable quantity | **Major** | **High** | `To Do` / `Open` | `TC-07` (**FAILED**) | Implementation Boundary Defect |
+| **SCRUM-8** | `[FR-06]` Notification dispatch blocked on unassigned request edit | **Medium** | **Medium** | `To Do` / `Open` | `TC-11` (**BLOCKED**) | Architecture Dependency Blocker |
 
 ### Complete Jira Ticket Fields:
 
-#### 1. Jira Ticket VIPER-BUG-01
-- **Issue Key:** `VIPER-BUG-01`
+#### 1. Jira Ticket SCRUM-7 (VIPER-BUG-01)
+- **Issue Key:** `SCRUM-7` (`VIPER-BUG-01`)
 - **Issue Type:** Bug / Defect
 - **Summary:** Supplier feedback submission form lacks upper and lower boundary validation on deliverable quantity
 - **Affected Environment / Build:** Web Baseline v1.0 (Frozen Build &bull; Node 24 / React 18 SPA)

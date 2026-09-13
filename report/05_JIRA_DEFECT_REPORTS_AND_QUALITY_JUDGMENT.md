@@ -28,18 +28,18 @@ Before logging issues in Jira, all failed and blocked test executions from Part 
 +---------------+---------------------------------------------------+------------+----------+-------+
 | Issue Key     | Summary / Title                                   | Severity   | Priority | Status|
 +---------------+---------------------------------------------------+------------+----------+-------+
-| VIPER-BUG-01  | Supplier feedback accepts exceeding/negative qty  | Major      | High     | OPEN  |
-| VIPER-BUG-02  | Notification dispatch blocked on unassigned req   | Medium     | Medium   | OPEN  |
+| SCRUM-7       | [FR-05] Supplier feedback accepts exceeding qty   | Major      | High     | To Do |
+| SCRUM-8       | [FR-06] Notification dispatch blocked on edit     | Medium     | Medium   | To Do |
 +---------------+---------------------------------------------------+------------+----------+-------+
 ```
 
 ---
 
-### Jira Ticket VIPER-BUG-01
+### Jira Ticket SCRUM-7 (VIPER-BUG-01)
 
-- **Issue Key:** `VIPER-BUG-01`
+- **Issue Key:** `SCRUM-7` (`VIPER-BUG-01`)
 - **Issue Type:** Bug / Defect
-- **Summary:** Supplier feedback submission form lacks upper and lower boundary validation on deliverable quantity
+- **Summary:** [FR-05] Supplier feedback accepts exceeding deliverable quantity
 - **Affected Environment / Build:** Web Baseline v1.0 (Frozen Build &bull; Node 24 / React 18 SPA)
 - **Component:** Supplier Portal / Feedback Workflow (`FR-05`, `dataService.js`, `SupplierRequests.jsx`)
 - **Related Test Case ID:** `TC-07`
@@ -65,11 +65,11 @@ Before logging issues in Jira, all failed and blocked test executions from Part 
 
 ---
 
-### Jira Ticket VIPER-BUG-02
+### Jira Ticket SCRUM-8 (VIPER-BUG-02)
 
-- **Issue Key:** `VIPER-BUG-02`
+- **Issue Key:** `SCRUM-8` (`VIPER-BUG-02`)
 - **Issue Type:** Bug / Dependency Blocker
-- **Summary:** Notification pipeline execution is blocked when Coordinator modifies an unassigned supply request
+- **Summary:** [FR-06] Notification dispatch blocked on unassigned request edit
 - **Affected Environment / Build:** Web Baseline v1.0 (Frozen Build &bull; React 18 SPA)
 - **Component:** Coordinator Request Management / Notification Engine (`FR-06`, `dataService.js`)
 - **Related Test Case ID:** `TC-11`

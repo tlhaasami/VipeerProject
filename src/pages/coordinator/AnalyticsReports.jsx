@@ -77,8 +77,8 @@ export const AnalyticsReports = () => {
   const downloadJiraCsv = () => {
     const csvContent =
       'Issue Type,Key,Summary,Priority,Severity,Status,Related Test Case,Description\n' +
-      'Bug,VIPER-01,"[NFR-01/FR-03] Concurrent Allocation Capacity Race Condition",High,High,Open,TC-07,"Under rapid concurrent order creation exceeding single-supplier capacity (15 units), the allocation coordinator accepts concurrent requests without locking, allowing 18 units to be reserved before boundary check triggers."\n' +
-      'Bug,VIPER-02,"[FR-04] PDF Invoice Generation Blocked on Empty Warehouse SKU",Medium,Medium,Open,TC-12,"When generating fulfillment invoice for custom ad-hoc item without pre-indexed warehouse SKU catalog ID, the PDF generator throws null-reference and blocks invoice creation."\n';
+      'Bug,SCRUM-7,"[FR-05] Supplier feedback accepts exceeding deliverable quantity",High,Major,To Do,TC-07,"Entering deliverable quantity 50 (or -5) on a 5-unit order is accepted without boundary validation."\n' +
+      'Bug,SCRUM-8,"[FR-06] Notification dispatch blocked on unassigned request edit",Medium,Medium,To Do,TC-11,"Editing priority on an unassigned order halts the notification pipeline because supplierId is null."\n';
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -269,17 +269,17 @@ export const AnalyticsReports = () => {
           <div className="p-4 bg-red-50/50 border border-red-200 rounded-xl space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="font-mono font-bold text-xs bg-red-600 text-white px-2 py-0.5 rounded">
-                VIPER-BUG-01
+                SCRUM-7
               </span>
               <span className="text-[11px] font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-full">
                 Major / FAILED (TC-07)
               </span>
             </div>
             <h3 className="font-bold text-xs text-[#2D0000]">
-              [FR-05] Supplier Feedback Lacks Upper & Lower Boundary Validation on Deliverable Quantity
+              [FR-05] Supplier feedback accepts exceeding deliverable quantity
             </h3>
             <p className="text-[11px] text-[#50574B] leading-relaxed">
-              When supplier responds to supply request REQ-2026-001 (5 units required), entering deliverable quantity 50 or -5 is accepted without boundary checks, corrupting downstream ERP fulfillment records.
+              Entering deliverable quantity 50 (or -5) on a 5-unit order is accepted without boundary validation, corrupting downstream ERP fulfillment records.
             </p>
             <div className="pt-2 border-t border-red-100 flex justify-between text-[10px] text-[#757D6F] font-mono">
               <span>Status: OPEN (To Do)</span>
@@ -291,17 +291,17 @@ export const AnalyticsReports = () => {
           <div className="p-4 bg-amber-50/50 border border-amber-200 rounded-xl space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="font-mono font-bold text-xs bg-amber-600 text-white px-2 py-0.5 rounded">
-                VIPER-BUG-02
+                SCRUM-8
               </span>
               <span className="text-[11px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
                 Medium / BLOCKED (TC-11)
               </span>
             </div>
             <h3 className="font-bold text-xs text-[#2D0000]">
-              [FR-06] Notification Pipeline Execution Blocked when Editing Unassigned Supply Request
+              [FR-06] Notification dispatch blocked on unassigned request edit
             </h3>
             <p className="text-[11px] text-[#50574B] leading-relaxed">
-              When Coordinator updates priority on unassigned order REQ-2026-003, the notification engine requires a valid supplierId foreign key. Because supplierId is null, notification creation halts and no stakeholder alert is delivered.
+              Editing priority on an unassigned order halts the notification pipeline because supplierId is null. Notification creation is skipped and no alert is delivered.
             </p>
             <div className="pt-2 border-t border-amber-100 flex justify-between text-[10px] text-[#757D6F] font-mono">
               <span>Status: OPEN (To Do)</span>

@@ -286,10 +286,10 @@
 | **FR-04** | Login & Domain Routing | `COND-09` | **TC-12** | System / Manual | **PASSED** | N/A |
 | **FR-04** | Login & Domain Routing | `COND-10` | **TC-14** | Security / Error | **PASSED** | N/A |
 | **FR-05** | Supplier Feedback Workflow | `COND-11` | **TC-08** | Workflow / System| **PASSED** | N/A |
-| **FR-05** | Supplier Feedback Workflow | `COND-12` | **TC-07** | Boundary / Error | **FAILED** | **`VIPER-BUG-01`** |
+| **FR-05** | Supplier Feedback Workflow | `COND-12` | **TC-07** | Boundary / Error | **FAILED** | **`SCRUM-7`** |
 | **FR-06** | Modification Notifications | `COND-13` | **TC-09** | Workflow / System| **PASSED** | N/A |
 | **FR-06** | Modification Notifications | `COND-14` | **TC-10** | Workflow / Manual| **PASSED** | N/A |
-| **FR-06** | Modification Notifications | `COND-14` | **TC-11** | Dependency / Blk | **BLOCKED** | **`VIPER-BUG-02`** |
+| **FR-06** | Modification Notifications | `COND-14` | **TC-11** | Dependency / Blk | **BLOCKED** | **`SCRUM-8`** |
 | **FR-07** | Invalid Login Handling | `COND-15` | **TC-13** | Error Handling | **PASSED** | N/A |
 
 ---
