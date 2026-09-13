@@ -6,7 +6,12 @@ import {
   Package,
   ArrowUpRight,
   PlusCircle,
-  Truck
+  Truck,
+  UserPlus,
+  UserCog,
+  ShieldCheck,
+  Building2,
+  Clock
 } from 'lucide-react';
 
 export const CoordinatorDashboard = ({ onNavigate }) => {
@@ -14,22 +19,25 @@ export const CoordinatorDashboard = ({ onNavigate }) => {
   const [customers, setCustomers] = useState([]);
   const [items, setItems] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadAll = async () => {
       setLoading(true);
       try {
-        const [reqs, custs, itms, supps] = await Promise.all([
+        const [reqs, custs, itms, supps, usrs] = await Promise.all([
           dataService.getRequests(),
           dataService.getCustomers(),
           dataService.getItems(),
-          dataService.getSuppliers()
+          dataService.getSuppliers(),
+          dataService.getUsers()
         ]);
-        setRequests(reqs);
-        setCustomers(custs);
-        setItems(itms);
-        setSuppliers(supps);
+        setRequests(reqs || []);
+        setCustomers(custs || []);
+        setItems(itms || []);
+        setSuppliers(supps || []);
+        setUsers(usrs || []);
       } finally {
         setLoading(false);
       }
@@ -73,19 +81,28 @@ export const CoordinatorDashboard = ({ onNavigate }) => {
 
   return (
     <div className="space-y-6">
-      {/* Page Title & Banner */}
+      {/* Page Title & Action Banner */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white border border-[#D8D2BC] rounded-2xl p-6 shadow-sm">
         <div>
           <h1 className="text-2xl font-extrabold text-[#2D0000]">Supply Chain Operations Overview</h1>
           <p className="text-[#50574B] text-xs mt-0.5 font-medium">
-            Central dispatch for procurement orders, enterprise clients, catalog inventory, and supplier allocations.
+            Central dispatch for procurement orders, enterprise clients, catalog inventory, and staff provisioning.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={() => onNavigate('users')}
+            className="flex items-center space-x-2 px-4 py-2.5 bg-[#F8F6EC] hover:bg-[#EEEAD7] text-[#6D0808] border border-[#D8D2BC] rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+            title="Manage and provision enterprise accounts"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>+ Add / Manage Users</span>
+          </button>
+
           <button
             onClick={() => onNavigate('requests')}
-            className="flex items-center space-x-2 px-4 py-2.5 bg-[#6D0808] hover:bg-[#820a0a] text-[#EEEAD7] rounded-xl text-xs font-semibold shadow-md shadow-[#6D0808]/20 transition-all"
+            className="flex items-center space-x-2 px-4 py-2.5 bg-[#6D0808] hover:bg-[#820a0a] text-[#EEEAD7] rounded-xl text-xs font-semibold shadow-md shadow-[#6D0808]/20 transition-all cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Create Supply Request</span>
@@ -94,7 +111,7 @@ export const CoordinatorDashboard = ({ onNavigate }) => {
       </div>
 
       {/* KPI Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Total Requests */}
         <div className="bg-white border border-[#D8D2BC] rounded-2xl p-5 hover:border-[#757D6F] transition-all shadow-sm">
           <div className="flex items-center justify-between">
@@ -109,8 +126,28 @@ export const CoordinatorDashboard = ({ onNavigate }) => {
           </div>
           <div className="mt-3 flex items-center text-[11px] text-[#757D6F] justify-between font-medium">
             <span>Procurement Pipeline</span>
-            <button onClick={() => onNavigate('requests')} className="text-[#6D0808] hover:underline flex items-center font-bold">
-              View All <ArrowUpRight className="w-3 h-3 ml-0.5" />
+            <button onClick={() => onNavigate('requests')} className="text-[#6D0808] hover:underline flex items-center font-bold cursor-pointer">
+              View <ArrowUpRight className="w-3 h-3 ml-0.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* User Accounts & Staff */}
+        <div className="bg-white border border-[#D8D2BC] rounded-2xl p-5 hover:border-[#757D6F] transition-all shadow-sm border-l-4 border-l-[#6D0808]">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#757D6F]">User Directory</span>
+            <div className="w-9 h-9 rounded-xl bg-[#6D0808]/15 text-[#6D0808] flex items-center justify-center">
+              <UserCog className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline space-x-2">
+            <span className="text-2xl font-extrabold text-[#2D0000]">{users.length}</span>
+            <span className="text-xs text-emerald-700 font-semibold">Active Staff</span>
+          </div>
+          <div className="mt-3 flex items-center text-[11px] text-[#757D6F] justify-between font-medium">
+            <span>RBAC Identity</span>
+            <button onClick={() => onNavigate('users')} className="text-[#6D0808] hover:underline flex items-center font-bold cursor-pointer">
+              Add User <ArrowUpRight className="w-3 h-3 ml-0.5" />
             </button>
           </div>
         </div>
@@ -129,8 +166,8 @@ export const CoordinatorDashboard = ({ onNavigate }) => {
           </div>
           <div className="mt-3 flex items-center text-[11px] text-[#757D6F] justify-between font-medium">
             <span>Client Directory</span>
-            <button onClick={() => onNavigate('customers')} className="text-[#2D0000] hover:underline flex items-center font-bold">
-              View All <ArrowUpRight className="w-3 h-3 ml-0.5" />
+            <button onClick={() => onNavigate('customers')} className="text-[#2D0000] hover:underline flex items-center font-bold cursor-pointer">
+              View <ArrowUpRight className="w-3 h-3 ml-0.5" />
             </button>
           </div>
         </div>
@@ -146,13 +183,13 @@ export const CoordinatorDashboard = ({ onNavigate }) => {
           <div className="mt-3 flex items-baseline space-x-2">
             <span className="text-2xl font-extrabold text-[#2D0000]">{items.length}</span>
             {lowStockItems.length > 0 && (
-              <span className="text-xs text-[#6D0808] font-semibold">({lowStockItems.length} low stock)</span>
+              <span className="text-xs text-[#6D0808] font-semibold">({lowStockItems.length} low)</span>
             )}
           </div>
           <div className="mt-3 flex items-center text-[11px] text-[#757D6F] justify-between font-medium">
-            <span>Hardware & Licenses</span>
-            <button onClick={() => onNavigate('items')} className="text-[#2D0000] hover:underline flex items-center font-bold">
-              View All <ArrowUpRight className="w-3 h-3 ml-0.5" />
+            <span>Hardware Catalog</span>
+            <button onClick={() => onNavigate('items')} className="text-[#2D0000] hover:underline flex items-center font-bold cursor-pointer">
+              View <ArrowUpRight className="w-3 h-3 ml-0.5" />
             </button>
           </div>
         </div>
@@ -160,133 +197,145 @@ export const CoordinatorDashboard = ({ onNavigate }) => {
         {/* Partner Suppliers */}
         <div className="bg-white border border-[#D8D2BC] rounded-2xl p-5 hover:border-[#757D6F] transition-all shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#757D6F]">Supply Partners</span>
-            <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#757D6F]">Certified Suppliers</span>
+            <div className="w-9 h-9 rounded-xl bg-[#2D0000]/10 text-[#2D0000] flex items-center justify-center">
               <Truck className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline space-x-2">
             <span className="text-2xl font-extrabold text-[#2D0000]">{suppliers.length}</span>
-            <span className="text-xs text-emerald-700 font-semibold">Tier-1 Certified</span>
+            <span className="text-xs text-emerald-700 font-semibold">Verified</span>
           </div>
           <div className="mt-3 flex items-center text-[11px] text-[#757D6F] justify-between font-medium">
-            <span>Fulfillment Network</span>
-            <span className="text-[#757D6F] font-semibold">Active</span>
+            <span>Hardware Network</span>
+            <button onClick={() => onNavigate('suppliers')} className="text-[#2D0000] hover:underline flex items-center font-bold cursor-pointer">
+              View <ArrowUpRight className="w-3 h-3 ml-0.5" />
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Main Content Grid: Recent Requests & Fast Actions */}
+      {/* Main Grid: Live Orders & Quick Dispatch Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Supply Requests (2 cols) */}
-        <div className="lg:col-span-2 bg-white border border-[#D8D2BC] rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
+        {/* Active Supply Requests Table */}
+        <div className="lg:col-span-2 bg-white border border-[#D8D2BC] rounded-2xl shadow-sm overflow-hidden flex flex-col">
+          <div className="p-5 border-b border-[#D8D2BC] flex items-center justify-between">
             <div>
-              <h2 className="text-base font-extrabold text-[#2D0000]">Active Supply Orders</h2>
-              <p className="text-xs text-[#757D6F] font-medium">Recent procurement orders in the Ejada pipeline</p>
+              <h2 className="text-sm font-extrabold text-[#2D0000]">Recent Supply Requests</h2>
+              <p className="text-[11px] text-[#757D6F] font-medium">Real-time status updates from procurement customers</p>
             </div>
             <button
               onClick={() => onNavigate('requests')}
-              className="text-xs text-[#6D0808] hover:text-[#820a0a] font-bold"
+              className="text-xs font-bold text-[#6D0808] hover:underline cursor-pointer"
             >
-              Manage Orders &rarr;
+              Manage All Requests &rarr;
             </button>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto flex-1">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#F8F6EC] text-[#50574B] border-b border-[#D8D2BC]">
+              <thead className="bg-[#F8F6EC] text-[#757D6F] uppercase tracking-wider border-b border-[#D8D2BC] font-bold">
                 <tr>
-                  <th className="p-3">Order Code</th>
-                  <th className="p-3">Client</th>
-                  <th className="p-3">Priority</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Assigned Supplier</th>
-                  <th className="p-3 text-right">Delivery Target</th>
+                  <th className="py-3 px-4">Request Ref</th>
+                  <th className="py-3 px-4">Item Details</th>
+                  <th className="py-3 px-4">Customer</th>
+                  <th className="py-3 px-4">Priority</th>
+                  <th className="py-3 px-4">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#D8D2BC]">
-                {requests.slice(0, 5).map((req) => {
-                  const cust = customers.find((c) => c.id === req.customerId);
-                  const supp = suppliers.find((s) => s.id === req.assignedSupplierId);
-                  return (
-                    <tr key={req.id} className="hover:bg-[#F8F6EC] transition-colors">
-                      <td className="p-3 font-mono font-bold text-[#6D0808]">{req.requestCode}</td>
-                      <td className="p-3 font-semibold text-[#2D0000]">{cust?.customerName || 'N/A'}</td>
-                      <td className="p-3">
-                        {renderPriorityDot(req.priority)}
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-[#757D6F]">
+                      Loading active requests...
+                    </td>
+                  </tr>
+                ) : requests.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-[#757D6F]">
+                      No active requests found.
+                    </td>
+                  </tr>
+                ) : (
+                  requests.slice(0, 6).map((req) => (
+                    <tr key={req.id} className="hover:bg-[#F8F6EC]/60 transition-colors">
+                      <td className="py-3 px-4 font-mono font-bold text-[#6D0808]">
+                        {req.requestId || req.id}
                       </td>
-                      <td className="p-3">
-                        {renderStatusDot(req.status)}
+                      <td className="py-3 px-4">
+                        <div className="font-bold text-[#2D0000]">{req.itemName || req.itemId}</div>
+                        <div className="text-[10px] text-[#757D6F]">Qty: {req.quantity}</div>
                       </td>
-                      <td className="p-3 text-[#50574B]">
-                        {supp ? supp.supplierName : <span className="text-stone-400 italic">Unassigned</span>}
+                      <td className="py-3 px-4 text-[#50574B] font-medium">
+                        {req.customerName || req.customerId}
                       </td>
-                      <td className="p-3 text-right font-mono text-[#757D6F] font-medium">{req.deliveryDate}</td>
+                      <td className="py-3 px-4">{renderPriorityDot(req.priority)}</td>
+                      <td className="py-3 px-4">{renderStatusDot(req.status)}</td>
                     </tr>
-                  );
-                })}
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* Quick Actions & System Specifications (1 col) */}
-        <div className="bg-white border border-[#D8D2BC] rounded-2xl p-6 space-y-6 shadow-sm">
-          <div>
-            <h2 className="text-base font-extrabold text-[#2D0000] mb-1">Quick Shortcuts</h2>
-            <p className="text-xs text-[#757D6F] font-medium">Direct access to core modules</p>
-          </div>
+        {/* Quick Operations Actions Panel */}
+        <div className="space-y-4">
+          <div className="bg-white border border-[#D8D2BC] rounded-2xl p-5 shadow-sm space-y-4">
+            <div className="border-b border-[#D8D2BC] pb-3">
+              <h2 className="text-sm font-extrabold text-[#2D0000]">Quick Operations Center</h2>
+              <p className="text-[11px] text-[#757D6F] font-medium">Administrative shortcuts and fast actions</p>
+            </div>
 
-          <div className="space-y-2.5">
-            <button
-              onClick={() => onNavigate('requests')}
-              className="w-full p-3 bg-[#F8F6EC] hover:bg-[#EEEAD7] border border-[#D8D2BC] rounded-xl flex items-center justify-between transition-colors text-left"
-            >
-              <div className="flex items-center space-x-3">
-                <ClipboardList className="w-4 h-4 text-[#6D0808]" />
-                <div>
-                  <p className="text-xs font-bold text-[#2D0000]">Supply Requests</p>
-                  <p className="text-[10px] text-[#757D6F]">Create, Edit, Delete, Assign</p>
+            <div className="grid grid-cols-1 gap-2.5 text-xs">
+              <button
+                onClick={() => onNavigate('users')}
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-[#F8F6EC] hover:bg-[#EEEAD7] text-[#2D0000] font-bold border border-[#D8D2BC] transition-all cursor-pointer group"
+              >
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#6D0808] text-[#EEEAD7] flex items-center justify-center shadow-xs">
+                    <UserPlus className="w-4 h-4" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs font-bold text-[#2D0000]">Provision New Staff Account</p>
+                    <p className="text-[10px] text-[#757D6F] font-medium">Add Coordinator, Supplier, or Customer</p>
+                  </div>
                 </div>
-              </div>
-              <span className="text-xs font-bold text-[#6D0808]">&rarr;</span>
-            </button>
+                <ArrowUpRight className="w-4 h-4 text-[#757D6F] group-hover:text-[#6D0808] transition-colors" />
+              </button>
 
-            <button
-              onClick={() => onNavigate('customers')}
-              className="w-full p-3 bg-[#F8F6EC] hover:bg-[#EEEAD7] border border-[#D8D2BC] rounded-xl flex items-center justify-between transition-colors text-left"
-            >
-              <div className="flex items-center space-x-3">
-                <Users className="w-4 h-4 text-[#757D6F]" />
-                <div>
-                  <p className="text-xs font-bold text-[#2D0000]">Client Directory</p>
-                  <p className="text-[10px] text-[#757D6F]">Accounts & Credit Limits</p>
+              <button
+                onClick={() => onNavigate('requests')}
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-[#F8F6EC] hover:bg-[#EEEAD7] text-[#2D0000] font-bold border border-[#D8D2BC] transition-all cursor-pointer group"
+              >
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#2D0000] text-[#EEEAD7] flex items-center justify-center shadow-xs">
+                    <ClipboardList className="w-4 h-4" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs font-bold text-[#2D0000]">Process Pending Allocations</p>
+                    <p className="text-[10px] text-[#757D6F] font-medium">Assign suppliers & dispatch dates</p>
+                  </div>
                 </div>
-              </div>
-              <span className="text-xs font-bold text-[#757D6F]">&rarr;</span>
-            </button>
+                <ArrowUpRight className="w-4 h-4 text-[#757D6F] group-hover:text-[#6D0808] transition-colors" />
+              </button>
 
-            <button
-              onClick={() => onNavigate('items')}
-              className="w-full p-3 bg-[#F8F6EC] hover:bg-[#EEEAD7] border border-[#D8D2BC] rounded-xl flex items-center justify-between transition-colors text-left"
-            >
-              <div className="flex items-center space-x-3">
-                <Package className="w-4 h-4 text-[#2D0000]" />
-                <div>
-                  <p className="text-xs font-bold text-[#2D0000]">Product Catalog</p>
-                  <p className="text-[10px] text-[#757D6F]">Pricing, Stock, Categories</p>
+              <button
+                onClick={() => onNavigate('analytics')}
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-[#F8F6EC] hover:bg-[#EEEAD7] text-[#2D0000] font-bold border border-[#D8D2BC] transition-all cursor-pointer group"
+              >
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#757D6F] text-[#EEEAD7] flex items-center justify-center shadow-xs">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs font-bold text-[#2D0000]">Run NFR Performance Benchmark</p>
+                    <p className="text-[10px] text-[#757D6F] font-medium">Execute 100 transaction stress test</p>
+                  </div>
                 </div>
-              </div>
-              <span className="text-xs font-bold text-[#2D0000]">&rarr;</span>
-            </button>
-          </div>
-
-          <div className="p-4 bg-[#F8F6EC] border border-[#D8D2BC] rounded-xl text-xs space-y-1.5">
-            <span className="font-bold text-[#2D0000] block">Enterprise Communication Sync</span>
-            <p className="text-[11px] text-[#50574B] leading-relaxed">
-              Every coordinator update automatically synchronizes with assigned supplier partner portals in real-time.
-            </p>
+                <ArrowUpRight className="w-4 h-4 text-[#757D6F] group-hover:text-[#6D0808] transition-colors" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
