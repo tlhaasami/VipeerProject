@@ -10,10 +10,13 @@ import {
   ArrowLeft,
   Volume2,
   VolumeX,
-  Sparkles
+  Sparkles,
+  Gamepad2,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
-// Cross-browser safe rounded rectangle drawing
+// Cross-browser safe rounded rectangle drawing for canvas
 const drawSafeRoundedRect = (ctx, x, y, width, height, radius, fillStyle, strokeStyle, lineWidth = 1) => {
   ctx.save();
   ctx.beginPath();
@@ -45,6 +48,16 @@ const drawSafeRoundedRect = (ctx, x, y, width, height, radius, fillStyle, stroke
 };
 
 export const NotFound404 = ({ onGoHome }) => {
+  // Eye tracking refs and state
+  const leftEyeRef = useRef(null);
+  const rightEyeRef = useRef(null);
+  const [leftPupilPos, setLeftPupilPos] = useState({ x: 0, y: 0 });
+  const [rightPupilPos, setRightPupilPos] = useState({ x: 0, y: 0 });
+  const [eyebrowTilt, setEyebrowTilt] = useState({ left: 0, right: 0, yOffset: 0 });
+  const [isBlinking, setIsBlinking] = useState(false);
+  const [showGame, setShowGame] = useState(false);
+
+  // Highway Runner Game states
   const canvasRef = useRef(null);
   const [gameState, setGameState] = useState('IDLE'); // IDLE, PLAYING, GAMEOVER
   const [score, setScore] = useState(0);
@@ -56,10 +69,80 @@ export const NotFound404 = ({ onGoHome }) => {
   const gameStateRef = useRef('IDLE');
   const audioCtxRef = useRef(null);
 
-  // Sync state to ref for stable loop access
+  // Sync game state to ref
   useEffect(() => {
     gameStateRef.current = gameState;
   }, [gameState]);
+
+  // Periodic organic eye blinking
+  useEffect(() => {
+    let blinkTimeout;
+    const triggerBlink = () => {
+      setIsBlinking(true);
+      setTimeout(() => {
+        setIsBlinking(false);
+        const nextBlink = Math.random() * 3500 + 2500;
+        blinkTimeout = setTimeout(triggerBlink, nextBlink);
+      }, 160);
+    };
+
+    blinkTimeout = setTimeout(triggerBlink, 3000);
+    return () => clearTimeout(blinkTimeout);
+  }, []);
+
+  // Eye cursor tracking (mouse and touch)
+  useEffect(() => {
+    const handlePointerMove = (e) => {
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+      if (!clientX || !clientY) return;
+
+      const calcPupilOffset = (eyeEl) => {
+        if (!eyeEl) return { x: 0, y: 0 };
+        const rect = eyeEl.getBoundingClientRect();
+        const eyeCenterX = rect.left + rect.width / 2;
+        const eyeCenterY = rect.top + rect.height / 2;
+
+        const dx = clientX - eyeCenterX;
+        const dy = clientY - eyeCenterY;
+        const angle = Math.atan2(dy, dx);
+        const maxDist = rect.width * 0.26; // Maximum pupil travel radius
+        const dist = Math.min(maxDist, Math.hypot(dx, dy) * 0.12);
+
+        return {
+          x: Math.cos(angle) * dist,
+          y: Math.sin(angle) * dist
+        };
+      };
+
+      const leftPos = calcPupilOffset(leftEyeRef.current);
+      const rightPos = calcPupilOffset(rightEyeRef.current);
+
+      setLeftPupilPos(leftPos);
+      setRightPupilPos(rightPos);
+
+      // Eyebrow dynamics based on vertical cursor position
+      const screenH = window.innerHeight || 800;
+      const screenW = window.innerWidth || 1200;
+      const normY = (clientY - screenH / 2) / (screenH / 2);
+      const normX = (clientX - screenW / 2) / (screenW / 2);
+
+      setEyebrowTilt({
+        left: -normX * 8 + normY * 4,
+        right: normX * 8 + normY * 4,
+        yOffset: Math.min(6, Math.max(-10, -normY * 8))
+      });
+    };
+
+    window.addEventListener('mousemove', handlePointerMove);
+    window.addEventListener('touchmove', handlePointerMove, { passive: true });
+
+    return () => {
+      window.removeEventListener('mousemove', handlePointerMove);
+      window.removeEventListener('touchmove', handlePointerMove);
+    };
+  }, []);
 
   // Web Audio Synthesizer for retro SCM sound effects
   const playSound = useCallback((type) => {
@@ -84,7 +167,6 @@ export const NotFound404 = ({ onGoHome }) => {
       gain.connect(ctx.destination);
 
       if (type === 'jump') {
-        // Cheerful bounce sweep
         osc.type = 'sine';
         osc.frequency.setValueAtTime(240, now);
         osc.frequency.exponentialRampToValueAtTime(600, now + 0.12);
@@ -93,7 +175,6 @@ export const NotFound404 = ({ onGoHome }) => {
         osc.start(now);
         osc.stop(now + 0.12);
       } else if (type === 'score') {
-        // Milestone coin chime
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(587.33, now);
         osc.frequency.setValueAtTime(880, now + 0.08);
@@ -102,7 +183,6 @@ export const NotFound404 = ({ onGoHome }) => {
         osc.start(now);
         osc.stop(now + 0.2);
       } else if (type === 'crash') {
-        // Impact collision buzz
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(160, now);
         osc.frequency.linearRampToValueAtTime(40, now + 0.25);
@@ -230,7 +310,6 @@ export const NotFound404 = ({ onGoHome }) => {
     g.obstacles.forEach((obs) => {
       ctx.save();
       if (obs.type === 'box') {
-        // Cargo Delivery Crate
         drawSafeRoundedRect(ctx, obs.x, obs.y, obs.width, obs.height, 3, '#D8D2BC', '#757D6F', 1.5);
         ctx.strokeStyle = '#6D0808';
         ctx.lineWidth = 2;
@@ -241,7 +320,6 @@ export const NotFound404 = ({ onGoHome }) => {
         ctx.lineTo(obs.x + 2, obs.y + obs.height - 2);
         ctx.stroke();
       } else if (obs.type === 'cone') {
-        // Highway Traffic Safety Cone
         ctx.fillStyle = '#EA580C';
         ctx.beginPath();
         ctx.moveTo(obs.x + obs.width / 2, obs.y);
@@ -254,7 +332,6 @@ export const NotFound404 = ({ onGoHome }) => {
         ctx.fillRect(obs.x + 4, obs.y + 12, obs.width - 8, 4);
         ctx.fillRect(obs.x + 6, obs.y + 6, obs.width - 12, 3);
       } else {
-        // Ejada High-Tech Data Rack
         drawSafeRoundedRect(ctx, obs.x, obs.y, obs.width, obs.height, 3, '#2D0000', '#6D0808', 1);
 
         ctx.fillStyle = '#10B981';
@@ -337,8 +414,10 @@ export const NotFound404 = ({ onGoHome }) => {
 
   // Initial mount render
   useEffect(() => {
-    renderFrame();
-  }, [renderFrame]);
+    if (showGame) {
+      renderFrame();
+    }
+  }, [showGame, renderFrame]);
 
   const jump = useCallback(() => {
     const g = gameRef.current;
@@ -465,12 +544,10 @@ export const NotFound404 = ({ onGoHome }) => {
           g.truck.y + pad < obs.y + obs.height &&
           g.truck.y + g.truck.height > obs.y + pad
         ) {
-          // Collision Detected!
           playSound('crash');
           gameStateRef.current = 'GAMEOVER';
           setGameState('GAMEOVER');
 
-          // Spawn crash debris particles
           for (let p = 0; p < 20; p++) {
             g.particles.push({
               x: g.truck.x + g.truck.width / 2,
@@ -496,7 +573,6 @@ export const NotFound404 = ({ onGoHome }) => {
         }
       }
 
-      // 5. Render Scene
       renderFrame();
       g.animationId = requestAnimationFrame(loop);
     };
@@ -543,7 +619,7 @@ export const NotFound404 = ({ onGoHome }) => {
     }
   }, [startGame, jump]);
 
-  // Stable Keyboard event listener (never cancels animation loop!)
+  // Stable Keyboard event listener
   const handleActionRef = useRef(handleAction);
   useEffect(() => {
     handleActionRef.current = handleAction;
@@ -551,7 +627,7 @@ export const NotFound404 = ({ onGoHome }) => {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+      if (showGame && (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW')) {
         e.preventDefault();
         handleActionRef.current();
       }
@@ -564,161 +640,279 @@ export const NotFound404 = ({ onGoHome }) => {
         cancelAnimationFrame(gameRef.current.animationId);
       }
     };
-  }, []); // Only run once on mount
+  }, [showGame]);
 
   return (
-    <div className="min-h-screen bg-[#EEEAD7] text-[#2D0000] flex flex-col justify-between p-3.5 sm:p-6 lg:p-8 font-sans selection:bg-[#6D0808] selection:text-[#EEEAD7]">
+    <div className="min-h-screen bg-[#EEEAD7] text-[#2D0000] flex flex-col justify-between p-4 sm:p-8 lg:p-12 font-sans selection:bg-[#6D0808] selection:text-[#EEEAD7] relative overflow-hidden">
+      {/* Subtle background ambient glow */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-[#6D0808]/5 rounded-full blur-3xl pointer-events-none" />
+
       {/* Top Header */}
-      <header className="max-w-4xl w-full mx-auto flex items-center justify-between py-2 border-b border-[#D8D2BC]">
-        <div className="flex items-center space-x-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#6D0808] to-[#8A1212] flex items-center justify-center shadow-md shadow-[#6D0808]/20">
+      <header className="max-w-5xl w-full mx-auto flex items-center justify-between py-3 relative z-10">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#6D0808] to-[#8A1212] flex items-center justify-center shadow-lg shadow-[#6D0808]/20">
             <Layers className="w-5 h-5 text-[#EEEAD7]" />
           </div>
           <div>
-            <span className="font-extrabold text-lg tracking-tight text-[#2D0000]">
+            <span className="font-black text-xl tracking-tight text-[#2D0000] block leading-none">
               VIPER <span className="text-[#6D0808]">SCM</span>
+            </span>
+            <span className="text-[10px] text-[#757D6F] font-semibold tracking-wider uppercase">
+              Ejada Supply Chain
             </span>
           </div>
         </div>
 
         <button
           onClick={onGoHome}
-          className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-white hover:bg-[#F8F6EC] text-[#2D0000] font-bold text-xs border border-[#D8D2BC] transition-all shadow-sm hover:scale-[1.02] active:scale-95 cursor-pointer"
+          className="flex items-center space-x-2 px-4 py-2.5 rounded-2xl bg-white hover:bg-[#F8F6EC] text-[#2D0000] font-bold text-xs border border-[#D8D2BC] transition-all shadow-sm hover:scale-105 active:scale-95 cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4 text-[#6D0808]" />
           <span>Return to Dashboard</span>
         </button>
       </header>
 
-      {/* Standalone 404 & Game Centerpiece */}
-      <main className="max-w-4xl w-full mx-auto my-auto py-6 space-y-6">
-        {/* 404 Header Banner (Pill removed per user request) */}
-        <div className="bg-white border border-[#D8D2BC] rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="space-y-2 text-center sm:text-left">
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[#2D0000]">
-              Manifest Not Found
-            </h1>
-            <p className="text-xs text-[#50574B] max-w-lg leading-relaxed">
-              The consignment tracking ID, destination route, or internal portal URL you requested does not exist on the Ejada VIPER network.
-            </p>
-          </div>
+      {/* Main Center Area with Headline and Interactive Eyes */}
+      <main className="max-w-5xl w-full mx-auto my-auto py-8 sm:py-12 flex flex-col items-center justify-center relative z-10 space-y-10 sm:space-y-14">
+        {/* Top Headline Message */}
+        <div className="w-full text-left sm:text-left space-y-3">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#2D0000] max-w-2xl leading-[1.12]">
+            Uh oh, the page you&rsquo;re looking for can&rsquo;t be found.
+          </h1>
+          <p className="text-xs sm:text-sm text-[#757D6F] font-medium max-w-xl leading-relaxed">
+            The requested consignment tracking ID, destination route, or portal URL does not exist on the Ejada VIPER network.
+          </p>
+        </div>
 
+        {/* Big Expressive Interactive Eyes Centerpiece */}
+        <div className="py-6 sm:py-10 flex flex-col items-center justify-center select-none">
+          <div className="flex items-center justify-center space-x-6 sm:space-x-12">
+            {/* Left Eye */}
+            <div className="flex flex-col items-center space-y-2.5 sm:space-y-3.5">
+              {/* Left Eyebrow */}
+              <svg
+                width="84"
+                height="28"
+                viewBox="0 0 84 28"
+                className="w-16 sm:w-24 h-auto transition-transform duration-100 ease-out"
+                style={{
+                  transform: `translateY(${eyebrowTilt.yOffset}px) rotate(${eyebrowTilt.left}deg)`
+                }}
+              >
+                <path
+                  d="M 6 22 Q 42 2 78 22"
+                  fill="none"
+                  stroke="#2D0000"
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                />
+              </svg>
+
+              {/* Left Eyeball */}
+              <div
+                ref={leftEyeRef}
+                className={`
+                  w-28 h-28 sm:w-40 sm:h-40 md:w-44 md:h-44
+                  rounded-full bg-white
+                  border-[10px] sm:border-[14px] md:border-[16px] border-[#2D0000]
+                  shadow-xl shadow-[#2D0000]/10
+                  relative flex items-center justify-center overflow-hidden
+                  transition-all duration-150
+                  ${isBlinking ? 'scale-y-[0.08]' : 'scale-y-100'}
+                `}
+              >
+                {/* Left Pupil */}
+                <div
+                  className="w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-[#2D0000] absolute transition-transform duration-75 ease-out shadow-inner"
+                  style={{
+                    transform: `translate(${leftPupilPos.x}px, ${leftPupilPos.y}px)`
+                  }}
+                >
+                  {/* Catchlight reflection dot */}
+                  <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-white absolute top-2 left-2" />
+                </div>
+              </div>
+            </div>
+
+            {/* Right Eye */}
+            <div className="flex flex-col items-center space-y-2.5 sm:space-y-3.5">
+              {/* Right Eyebrow */}
+              <svg
+                width="84"
+                height="28"
+                viewBox="0 0 84 28"
+                className="w-16 sm:w-24 h-auto transition-transform duration-100 ease-out"
+                style={{
+                  transform: `translateY(${eyebrowTilt.yOffset}px) rotate(${eyebrowTilt.right}deg)`
+                }}
+              >
+                <path
+                  d="M 6 22 Q 42 2 78 22"
+                  fill="none"
+                  stroke="#2D0000"
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                />
+              </svg>
+
+              {/* Right Eyeball */}
+              <div
+                ref={rightEyeRef}
+                className={`
+                  w-28 h-28 sm:w-40 sm:h-40 md:w-44 md:h-44
+                  rounded-full bg-white
+                  border-[10px] sm:border-[14px] md:border-[16px] border-[#2D0000]
+                  shadow-xl shadow-[#2D0000]/10
+                  relative flex items-center justify-center overflow-hidden
+                  transition-all duration-150
+                  ${isBlinking ? 'scale-y-[0.08]' : 'scale-y-100'}
+                `}
+              >
+                {/* Right Pupil */}
+                <div
+                  className="w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-[#2D0000] absolute transition-transform duration-75 ease-out shadow-inner"
+                  style={{
+                    transform: `translate(${rightPupilPos.x}px, ${rightPupilPos.y}px)`
+                  }}
+                >
+                  {/* Catchlight reflection dot */}
+                  <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-white absolute top-2 left-2" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons & Mini Game Drawer Toggle */}
+        <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
           <button
             onClick={onGoHome}
-            className="flex items-center space-x-2 px-5 py-3 rounded-2xl bg-[#6D0808] hover:bg-[#2D0000] text-[#EEEAD7] font-bold text-xs transition-all shadow-md shadow-[#6D0808]/20 hover:scale-105 active:scale-95 cursor-pointer shrink-0"
+            className="flex items-center space-x-2.5 px-6 py-3.5 rounded-2xl bg-[#6D0808] hover:bg-[#2D0000] text-[#EEEAD7] font-bold text-xs sm:text-sm transition-all shadow-lg shadow-[#6D0808]/25 hover:scale-105 active:scale-95 cursor-pointer"
           >
             <Home className="w-4 h-4" />
             <span>Return to SCM Dashboard</span>
           </button>
-        </div>
 
-        {/* VIPER SCM Express Runner Game Container */}
-        <div className="bg-white border border-[#D8D2BC] rounded-3xl p-5 sm:p-6 shadow-md space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D8D2BC] pb-3">
-            <div className="flex items-center space-x-2.5">
-              <div className="w-9 h-9 rounded-xl bg-[#6D0808] text-[#EEEAD7] flex items-center justify-center font-bold shadow-sm">
-                <Truck className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-sm font-black text-[#2D0000]">VIPER Express Highway Runner</h2>
-                <p className="text-[11px] text-[#757D6F]">Jump over cargo crates, server towers, and cones on the Riyadh route!</p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3 text-xs font-mono font-bold">
-              <button
-                onClick={() => setSoundEnabled(!soundEnabled)}
-                className="p-2 rounded-xl bg-[#F8F6EC] hover:bg-[#EEEAD7] text-[#50574B] border border-[#D8D2BC] cursor-pointer transition-all"
-                title={soundEnabled ? 'Mute Game Sound' : 'Enable Game Sound'}
-              >
-                {soundEnabled ? <Volume2 className="w-4 h-4 text-[#6D0808]" /> : <VolumeX className="w-4 h-4 text-zinc-400" />}
-              </button>
-              <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#6D0808]/10 border border-[#6D0808]/20 rounded-xl text-[#6D0808]">
-                <Package className="w-4 h-4" />
-                <span>SCORE: {score}</span>
-              </div>
-              <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#F8F6EC] border border-[#D8D2BC] rounded-xl text-[#50574B]">
-                <Trophy className="w-4 h-4 text-amber-600" />
-                <span>BEST: {highScore}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Interactive Game Canvas Box */}
-          <div
-            onClick={handleAction}
-            onTouchStart={(e) => {
-              e.preventDefault();
-              handleAction();
-            }}
-            className="relative w-full overflow-hidden rounded-2xl border border-[#D8D2BC] bg-[#F8F6EC] cursor-pointer select-none group focus:outline-none shadow-inner"
-            tabIndex={0}
+          <button
+            onClick={() => setShowGame(!showGame)}
+            className="flex items-center space-x-2 px-5 py-3.5 rounded-2xl bg-white hover:bg-[#F8F6EC] text-[#2D0000] font-bold text-xs sm:text-sm border border-[#D8D2BC] transition-all shadow-sm hover:scale-105 active:scale-95 cursor-pointer"
           >
-            <canvas
-              ref={canvasRef}
-              width={760}
-              height={190}
-              className="w-full h-[190px] block"
-            />
+            <Gamepad2 className="w-4 h-4 text-[#6D0808]" />
+            <span>{showGame ? 'Hide Highway Runner' : 'Play Highway Runner Simulator'}</span>
+            {showGame ? <ChevronUp className="w-4 h-4 text-[#757D6F]" /> : <ChevronDown className="w-4 h-4 text-[#757D6F]" />}
+          </button>
+        </div>
 
-            {/* IDLE State Overlay */}
-            {gameState === 'IDLE' && (
-              <div className="absolute inset-0 bg-black/25 backdrop-blur-[2px] flex flex-col items-center justify-center text-center p-4">
-                <div className="w-12 h-12 rounded-2xl bg-[#6D0808] text-[#EEEAD7] flex items-center justify-center shadow-xl mb-2.5 group-hover:scale-110 transition-transform">
-                  <Play className="w-6 h-6 ml-0.5" />
+        {/* Optional Expandable 60 FPS Highway Runner Canvas Box */}
+        {showGame && (
+          <div className="w-full max-w-4xl bg-white border border-[#D8D2BC] rounded-3xl p-5 sm:p-6 shadow-xl space-y-4 animate-in fade-in slide-in-from-top-4 duration-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D8D2BC] pb-3">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#6D0808] text-[#EEEAD7] flex items-center justify-center font-bold shadow-sm">
+                  <Truck className="w-5 h-5" />
                 </div>
-                <p className="text-sm font-black text-white drop-shadow-md">Click Canvas or Press SPACE to Start Run</p>
-                <p className="text-xs text-[#EEEAD7] mt-1 font-medium drop-shadow">Use SPACEBAR, UP ARROW, or Tap anywhere to jump</p>
+                <div>
+                  <h2 className="text-sm font-black text-[#2D0000]">VIPER Express Highway Runner</h2>
+                  <p className="text-[11px] text-[#757D6F]">Jump over cargo crates, server towers, and cones on the Riyadh route!</p>
+                </div>
               </div>
-            )}
 
-            {/* GAME OVER State Overlay */}
-            {gameState === 'GAMEOVER' && (
-              <div className="absolute inset-0 bg-black/45 backdrop-blur-[3px] flex flex-col items-center justify-center text-center p-4 animate-in fade-in duration-200">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-[#EEEAD7] mb-1">SCM Dispatch Route Blocked</p>
-                <h3 className="text-2xl sm:text-3xl font-black text-white drop-shadow-md">DELIVERY RUN OVER</h3>
-                <p className="text-xs text-[#EEEAD7] mt-1 font-mono">
-                  Final Score: <span className="font-bold text-amber-300">{score}</span> | Record: <span className="font-bold text-emerald-300">{highScore}</span>
-                </p>
+              <div className="flex items-center space-x-3 text-xs font-mono font-bold">
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    startGame();
-                  }}
-                  className="mt-3.5 flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-[#6D0808] hover:bg-[#2D0000] text-[#EEEAD7] font-bold text-xs shadow-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                  onClick={() => setSoundEnabled(!soundEnabled)}
+                  className="p-2 rounded-xl bg-[#F8F6EC] hover:bg-[#EEEAD7] text-[#50574B] border border-[#D8D2BC] cursor-pointer transition-all"
+                  title={soundEnabled ? 'Mute Game Sound' : 'Enable Game Sound'}
                 >
-                  <RotateCcw className="w-4 h-4" />
-                  <span>Restart Run (Space)</span>
+                  {soundEnabled ? <Volume2 className="w-4 h-4 text-[#6D0808]" /> : <VolumeX className="w-4 h-4 text-zinc-400" />}
                 </button>
+                <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#6D0808]/10 border border-[#6D0808]/20 rounded-xl text-[#6D0808]">
+                  <Package className="w-4 h-4" />
+                  <span>SCORE: {score}</span>
+                </div>
+                <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#F8F6EC] border border-[#D8D2BC] rounded-xl text-[#50574B]">
+                  <Trophy className="w-4 h-4 text-amber-600" />
+                  <span>BEST: {highScore}</span>
+                </div>
               </div>
-            )}
-          </div>
-
-          {/* Controls Bar & Tap to Jump mobile button */}
-          <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-[#757D6F] pt-1">
-            <div className="flex items-center space-x-2">
-              <span className="px-2 py-1 bg-[#F8F6EC] border border-[#D8D2BC] rounded-md font-mono text-[11px] font-bold text-[#2D0000]">SPACE</span>
-              <span>or</span>
-              <span className="px-2 py-1 bg-[#F8F6EC] border border-[#D8D2BC] rounded-md font-mono text-[11px] font-bold text-[#2D0000]">▲ UP</span>
-              <span>or Click Canvas to Jump</span>
             </div>
 
-            <button
+            {/* Interactive Game Canvas Box */}
+            <div
               onClick={handleAction}
-              className="px-4 py-2 rounded-xl bg-[#6D0808] hover:bg-[#2D0000] text-[#EEEAD7] font-bold text-xs flex items-center justify-center space-x-2 shadow-sm active:scale-95 cursor-pointer"
+              onTouchStart={(e) => {
+                e.preventDefault();
+                handleAction();
+              }}
+              className="relative w-full overflow-hidden rounded-2xl border border-[#D8D2BC] bg-[#F8F6EC] cursor-pointer select-none group focus:outline-none shadow-inner"
+              tabIndex={0}
             >
-              <Sparkles className="w-4 h-4" />
-              <span>{gameState === 'PLAYING' ? 'JUMP TRUCK' : 'START GAME'}</span>
-            </button>
+              <canvas
+                ref={canvasRef}
+                width={760}
+                height={190}
+                className="w-full h-[190px] block"
+              />
 
-            <p className="font-medium hidden sm:block">SCM Logistics Highway Simulator &bull; 60 FPS Engine</p>
+              {/* IDLE State Overlay */}
+              {gameState === 'IDLE' && (
+                <div className="absolute inset-0 bg-black/25 backdrop-blur-[2px] flex flex-col items-center justify-center text-center p-4">
+                  <div className="w-12 h-12 rounded-2xl bg-[#6D0808] text-[#EEEAD7] flex items-center justify-center shadow-xl mb-2.5 group-hover:scale-110 transition-transform">
+                    <Play className="w-6 h-6 ml-0.5" />
+                  </div>
+                  <p className="text-sm font-black text-white drop-shadow-md">Click Canvas or Press SPACE to Start Run</p>
+                  <p className="text-xs text-[#EEEAD7] mt-1 font-medium drop-shadow">Use SPACEBAR, UP ARROW, or Tap anywhere to jump</p>
+                </div>
+              )}
+
+              {/* GAME OVER State Overlay */}
+              {gameState === 'GAMEOVER' && (
+                <div className="absolute inset-0 bg-black/45 backdrop-blur-[3px] flex flex-col items-center justify-center text-center p-4 animate-in fade-in duration-200">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-[#EEEAD7] mb-1">SCM Dispatch Route Blocked</p>
+                  <h3 className="text-2xl sm:text-3xl font-black text-white drop-shadow-md">DELIVERY RUN OVER</h3>
+                  <p className="text-xs text-[#EEEAD7] mt-1 font-mono">
+                    Final Score: <span className="font-bold text-amber-300">{score}</span> | Record: <span className="font-bold text-emerald-300">{highScore}</span>
+                  </p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      startGame();
+                    }}
+                    className="mt-3.5 flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-[#6D0808] hover:bg-[#2D0000] text-[#EEEAD7] font-bold text-xs shadow-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Restart Run (Space)</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Controls Bar & Jump button */}
+            <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-[#757D6F] pt-1">
+              <div className="flex items-center space-x-2">
+                <span className="px-2 py-1 bg-[#F8F6EC] border border-[#D8D2BC] rounded-md font-mono text-[11px] font-bold text-[#2D0000]">SPACE</span>
+                <span>or</span>
+                <span className="px-2 py-1 bg-[#F8F6EC] border border-[#D8D2BC] rounded-md font-mono text-[11px] font-bold text-[#2D0000]">▲ UP</span>
+                <span>or Click Canvas to Jump</span>
+              </div>
+
+              <button
+                onClick={handleAction}
+                className="px-4 py-2 rounded-xl bg-[#6D0808] hover:bg-[#2D0000] text-[#EEEAD7] font-bold text-xs flex items-center justify-center space-x-2 shadow-sm active:scale-95 cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>{gameState === 'PLAYING' ? 'JUMP TRUCK' : 'START GAME'}</span>
+              </button>
+
+              <p className="font-medium hidden sm:block">SCM Logistics Highway Simulator &bull; 60 FPS Engine</p>
+            </div>
           </div>
-        </div>
+        )}
       </main>
 
       {/* Enterprise Footer */}
-      <footer className="text-center text-xs text-[#757D6F] font-medium py-3 border-t border-[#D8D2BC]">
-        Ejada Company &bull; Supply Chain Management Operations
+      <footer className="max-w-5xl w-full mx-auto flex flex-col sm:flex-row items-center justify-between py-4 border-t border-[#D8D2BC] text-xs text-[#757D6F] font-medium relative z-10 gap-2">
+        <div>Ejada Company &bull; Supply Chain Management Operations</div>
+        <div className="font-mono text-[11px]">VIPER SCM Error Diagnostics &bull; 404 Route</div>
       </footer>
     </div>
   );
