@@ -58,12 +58,13 @@ const MainLayout = () => {
     );
   }
 
+  // If 404 Error state
+  if (currentView === '404') {
+    return <NotFound404 onGoHome={() => setCurrentView('dashboard')} />;
+  }
+
   // Render view based on domain and currentView
   const renderViewContent = () => {
-    if (currentView === '404') {
-      return <NotFound404 onGoHome={() => setCurrentView('dashboard')} />;
-    }
-
     if (domain === 'coordinator') {
       switch (currentView) {
         case 'users':
