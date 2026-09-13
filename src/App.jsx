@@ -30,6 +30,7 @@ import { CustomerAccount } from './pages/customer/CustomerAccount';
 import { CustomerHistory } from './pages/customer/CustomerHistory';
 import { BrowseCatalog } from './pages/customer/BrowseCatalog';
 import { OrderTracking } from './pages/customer/OrderTracking';
+import { NotFound404 } from './pages/NotFound404';
 
 const MainLayout = () => {
   const { isAuthenticated, domain } = useAuth();
@@ -58,6 +59,10 @@ const MainLayout = () => {
 
   // Render view based on domain and currentView
   const renderViewContent = () => {
+    if (currentView === '404') {
+      return <NotFound404 onGoHome={() => setCurrentView('dashboard')} />;
+    }
+
     if (domain === 'coordinator') {
       switch (currentView) {
         case 'users':

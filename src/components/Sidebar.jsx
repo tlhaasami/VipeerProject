@@ -20,7 +20,8 @@ import {
   Navigation,
   FileCheck,
   Boxes,
-  UserCog
+  UserCog,
+  Gamepad2
 } from 'lucide-react';
 
 export const Sidebar = ({ currentView, onNavigate }) => {
@@ -141,8 +142,25 @@ export const Sidebar = ({ currentView, onNavigate }) => {
           </nav>
         </div>
 
-        {/* Bottom Section: User Info & Exit */}
-        <div className="pt-3 border-t border-[#D8D2BC]">
+        {/* Bottom Section: 404 Game & User Info & Exit */}
+        <div className="pt-3 border-t border-[#D8D2BC] space-y-2">
+          {/* 404 Route Simulator Link */}
+          <button
+            onClick={() => onNavigate('404')}
+            title="Highway 404 Runner Game"
+            className={`w-full flex items-center ${
+              isCollapsed ? 'justify-center p-2' : 'justify-between px-3 py-1.5'
+            } rounded-xl text-[11px] font-semibold text-[#757D6F] hover:text-[#6D0808] hover:bg-[#F8F6EC] transition-all cursor-pointer`}
+          >
+            <div className="flex items-center space-x-2 min-w-0">
+              <Gamepad2 className="w-3.5 h-3.5 text-[#6D0808] shrink-0" />
+              {!isCollapsed && <span className="truncate">404 Route Game</span>}
+            </div>
+            {!isCollapsed && (
+              <span className="px-1.5 py-0.5 rounded bg-[#6D0808]/10 text-[#6D0808] text-[9px] font-bold">404</span>
+            )}
+          </button>
+
           <div
             className={`p-2 bg-[#F8F6EC] border border-[#D8D2BC] rounded-xl flex items-center ${
               isCollapsed ? 'justify-center flex-col gap-2' : 'justify-between'
