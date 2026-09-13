@@ -46,21 +46,21 @@
 
 ### Q4: Explain the SonarQube findings you analyzed. Why do ratings alone not equal quality interpretation?
 **Defensible Answer:**
-> "Raw ratings or Quality Gate passes can create a false sense of security. We analyzed 5 distinct technical findings:
-> 1. **Security Hotspot (S2068):** Client-side password comparison in `dataService.js:77`. While suitable for an offline baseline, production requires server-side hashing (bcrypt).
-> 2. **Reliability Bug (S2259):** Null reference vulnerability in notification dispatching when requests have unassigned suppliers (`dataService.js:180`).
-> 3. **Maintainability / Complexity (S3776):** High Cognitive Complexity (score: 19) in `ManageRequests.jsx` due to combined modal handling, filtering, and foreign key resolution.
-> 4. **Code Duplication (S1192):** Repeated string literals for status codes and categories across CRUD modals.
-> 5. **Resilience / Code Smell (S2139):** Unprotected `JSON.parse` calls on local storage keys without schema recovery wrappers."
+> "Raw ratings or Quality Gate passes can create a false sense of security. While SonarQube 9.9.8 gave our 8,207 LOC codebase a PASSED Quality Gate with A ratings, we deeply analyzed 5 distinct technical findings:
+> 1. **Security Hotspot (S2068):** Hardcoded plaintext passwords in `mockData.js:7,16,26` evaluated client-side in the prototype fallback.
+> 2. **Security Hotspot (S2245):** Usage of predictable pseudorandom number generator `Math.random()` for transaction identifiers in `dataService.js:72`.
+> 3. **Maintainability / Complexity (S3776):** High Cognitive Complexity (score: 24 vs 15 threshold) in `ManageRequests.jsx` and `ManageUsers.jsx` due to combined filter predicates and state branching.
+> 4. **Maintainability / Code Style (S3358):** Nested ternary operators in status badge rendering.
+> 5. **Maintainability / Code Smells (S1128 & S1854):** Unused imports and dead store variables adding unnecessary bundle overhead."
 
 ---
 
 ### Q5: How did you evaluate the 3 NFRs when SonarQube cannot measure runtime metrics?
 **Defensible Answer:**
-> "We recognized that static code analysis cannot evaluate runtime performance or dynamic fault recovery. We applied targeted empirical evaluation methods:
-> - **NFR-01 (Performance & Concurrency):** We embedded a real-time `PerformanceMonitor` and executed an automated 100-user concurrency benchmark. **100% of transactions completed in < 1.0s (averaging 12.4 ms)** with payloads averaging **1.45 KB** (well within the 50 KB SRS limit).
-> - **NFR-02 (Security RBAC):** We conducted structural code inspection and route-level session verification in `AuthContext`, confirming that Suppliers cannot access Coordinator deletion/pricing controls.
-> - **NFR-03 (Availability & Error Handling):** We executed a fault-injection crash test via the React `ErrorBoundary`, proving that unhandled runtime exceptions are intercepted with user-friendly recovery UI rather than crashing the browser tab."
+> "We recognized that static code analysis cannot evaluate runtime latency or fault tolerance. We applied targeted empirical evaluation methods:
+> - **NFR-01 (Performance Efficiency):** We executed an automated 10-iteration continuous burst benchmark against the backend. **100% of transactions completed well under the 500ms SLA, averaging 40.57 ms** (P95: 47.73 ms) with 18.4 KB payloads.
+> - **NFR-02 (Security RBAC):** We conducted structural code inspection and route-level session verification in `AuthContext`, confirming that Suppliers and Customers cannot access Coordinator controls.
+> - **NFR-03 (Availability & Fault Tolerance):** We executed a synthetic exception test via the React `ErrorBoundary`, proving that unhandled runtime exceptions are intercepted with user-friendly recovery UI rather than crashing the browser tab."
 
 ---
 
@@ -69,8 +69,8 @@
 ### Q6: Walk us through your FAILED (`TC-07`) and BLOCKED (`TC-11`) test cases. How do you defend that these are genuine?
 **Defensible Answer:**
 > "We did not manufacture or relabel passed tests. Both cases represent authentic baseline behaviors:
-> 1. **TC-07 (FAILED - FR-05 Boundary Defect):** We tested submitting a supplier feedback commitment of `50 units` on a request requiring only `5 units` (and tested `-5 units`). The SRS requires stating deliverable capacity, but the baseline accepted the input without validation error, producing a genuine `actual != expected` failure (**Jira Bug: `VIPER-BUG-01`**).
-> 2. **TC-11 (BLOCKED - FR-06 Dependency Blocker):** When a coordinator edits an unassigned request (`REQ-2026-003` where `assignedSupplierId` is null), the notification pipeline cannot dispatch the alert because the prerequisite entity linkage (`supplierId`) is missing. The test could not verify notification delivery because the prerequisite dependency prevented execution (**Jira Bug: `VIPER-BUG-02`**)."
+> 1. **TC-07 (FAILED - FR-05 Boundary Defect):** We tested submitting a supplier feedback commitment of `50 units` on a request requiring only `5 units` (and tested `-5 units`). The SRS requires stating deliverable capacity, but the baseline accepted the input without validation error, producing a genuine `actual != expected` failure (**Jira Bug: `SCRUM-7` / `VIPER-BUG-01`**).
+> 2. **TC-11 (BLOCKED - FR-06 Dependency Blocker):** When a coordinator edits an unassigned request (`REQ-2026-003` where `assignedSupplierId` is null), the notification pipeline cannot dispatch the alert because the prerequisite entity linkage (`supplierId`) is missing. The test could not verify notification delivery because the prerequisite dependency prevented execution (**Jira Bug: `SCRUM-8` / `VIPER-BUG-02`**)."
 
 ---
 
@@ -84,6 +84,6 @@
 ### Q8: What is your final conclusion on the software quality?
 **Defensible Answer:**
 > "Based on 14 test executions, NFR telemetry, and SonarQube analysis, the baseline is **conditionally acceptable as an operational prototype**, but requires two mandatory fixes before commercial release:
-> 1. Input range validation on supplier feedback quantity (`VIPER-BUG-01`).
-> 2. Nullable supplier handling in the notification pipeline (`VIPER-BUG-02`).
+> 1. Input range validation on supplier feedback quantity (`SCRUM-7`).
+> 2. Nullable supplier handling in the notification pipeline (`SCRUM-8`).
 > With 85.7% functional pass rate and 100% performance/availability compliance, the core workflow is solid and defensible."

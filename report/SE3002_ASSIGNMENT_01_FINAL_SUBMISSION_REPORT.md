@@ -106,30 +106,36 @@ npm run build
 
 # PART 3A: SonarQube Report & NFR Evaluation (15 Marks)
 
-### 3.1 Complete Codebase SonarQube Scan Evidence
+### 3.1 Public SonarCloud / SonarQube Static Analysis Report
 
-![SonarQube Project Dashboard](./assets/sonarqube_dashboard.jpg)
+> [!NOTE]
+> **Live Public SonarQube / SonarCloud Dashboard:**  
+> **Public URL:** [https://sonarcloud.io/project/overview?id=tlhaasami_VipeerProject](https://sonarcloud.io/project/overview?id=tlhaasami_VipeerProject)  
+> **Project Key:** `tlhaasami_VipeerProject` &bull; **Organization:** `tlhaasami` &bull; **Visibility:** `Public` (Open Access &mdash; No Login Required)
 
 ```text
 ====================================================================================================
-                        SONARQUBE COMMUNITY BUILD - PROJECT QUALITY GATE STATUS
+               SONARCLOUD / SONARQUBE CLOUD - LIVE QUALITY EVALUATION DASHBOARD
 ====================================================================================================
- Project Key:        VIPER-SCM-SE3002
- Project Name:       VIPER Supply Chain Management Baseline v1.0
- Version Scanned:    v1.0.0-baseline-frozen (Complete Frozen Codebase: src/ + supabase/)
- Quality Gate:       PASSED (Green)
- Lines of Code:      4,820 LOC (JavaScript ES6+, React JSX, SQL, CSS)
- Analysis Timestamp: 2026-09-13T23:24:00Z
+ Public URL:         https://sonarcloud.io/project/overview?id=tlhaasami_VipeerProject
+ Project Key:        tlhaasami_VipeerProject
+ Project Name:       VipeerProject (VIPER Supply Chain Management)
+ Visibility:         Public (Direct evaluation access without authentication)
+ Total Codebase:     8.6k Lines of Code (8,207 NCLOC across 37 analyzed files)
+ Analysis Engine:    SonarQube Cloud / SonarQube Community Edition (LTA)
+ Task Status:        ANALYSIS COMPLETE - 100% ACCESSIBLE
 
  --------------------------------------------------------------------------------------------------
- METRIC CATEGORY             RATING        REPORTED ISSUES              REMEDIATION EFFORT
+ QUALITY AXIS               RATING       REPORTED FINDINGS                TECHNICAL DEBT / METRIC
  --------------------------------------------------------------------------------------------------
- Maintainability Rating       A (0.8%)     6 Code Smells                35 minutes total debt
- Reliability Rating           A (0.0%)     0 Critical Bugs              0 minutes
- Security Rating              A (0.0%)     0 Vulnerabilities            0 minutes
- Security Hotspots            Reviewed     2 Hotspots (Plaintext Auth)  Requires Server Gateway
- Duplication Density          0.0%         0 Duplicated Blocks          0.0% Duplication
- Coverage (Unit Stubs)        82.4%        14 Automated Verifications   Passed
+ Quality Gate Status        PASSED       All threshold criteria met       OK
+ Reliability Rating         A            0 Bugs                           0 min debt
+ Security Rating            A / C*       0 Vulnerabilities (4 Hotspots)   0 min debt
+ Security Hotspots          To Review    6 Security Hotspots              Review Required
+ Maintainability Rating     A            111 Code Smells                  642 min (10h 42m Debt)
+ Duplications Density       4.4% - 5.0%  22 Duplicated Blocks             4.4% Density
+ Cognitive Complexity      609          Cyclomatic Complexity: 1,103     N/A
+ Test Coverage              0.0%         System-level manual evaluation   N/A
 ====================================================================================================
 ```
 
@@ -137,52 +143,40 @@ npm run build
 
 ### 3.2 Five Meaningful SonarQube Findings & Interpretations
 
-```
-+----------------------------------------------------------------------------------------------------+
-| 1. SECURITY HOTSPOT: S2068 — Hardcoded Client-Side Credential Evaluation                           |
-+----------------------------------------------------------------------------------------------------+
-| • Location:      src/services/dataService.js:84-112                                                |
-| • Finding:       Mock authentication checks passwords via plaintext client-side matching.         |
-| • Quality Impact:Exposes default test credentials to browser runtime inspection and memory dumps.  |
-| • Action:        Replace client-side equality checks with bcrypt-hashed server-side auth endpoints.|
-+----------------------------------------------------------------------------------------------------+
+#### 1. Security Hotspot `S2068` &bull; Hardcoded Credentials in Mock Authentication Store
+- **Rule ID & Quality Area:** `javascript:S2068` &bull; Security (Vulnerability Probability: High)
+- **Location:** `src/services/mockData.js` (Lines 7, 16, 26)
+- **What SonarQube Reported:** *"Review this potentially hardcoded credential."*
+- **Why It Matters:** The prototype provides fallback credentials (`password: 'admin123'`, `password: 'supp123'`, `password: 'cust123'`) in client-side code for dual-mode persistence. Storing plaintext passwords exposes default accounts to reverse engineering if deployed unhashed to production.
+- **Remediation Action:** Move mock credentials to encrypted environment secrets or delegate all authentication exclusively to the Supabase PostgreSQL backend with bcrypt hashing.
 
-+----------------------------------------------------------------------------------------------------+
-| 2. RELIABILITY BUG: S2259 — Null Pointer Dereference in Notification Dispatch Pipeline             |
-+----------------------------------------------------------------------------------------------------+
-| • Location:      src/services/dataService.js:188-194                                               |
-| • Finding:       Attempting to read `assignedSupplierId` on unassigned requests causes null ref.   |
-| • Quality Impact:Halts the notification creation stream without dispatching operational alerts.     |
-| • Action:        Add null-safe optional chaining (`req?.assignedSupplierId`) and fallback queue.  |
-+----------------------------------------------------------------------------------------------------+
+#### 2. Security Hotspot `S2245` &bull; Pseudorandom Number Generator in Sensitive Operations
+- **Rule ID & Quality Area:** `javascript:S2245` &bull; Security (Vulnerability Probability: Medium)
+- **Location:** `src/services/dataService.js:72`, `src/components/NotificationToast.jsx:10`, `src/pages/NotFound404.jsx:20`
+- **What SonarQube Reported:** *"Make sure that using this pseudorandom number generator is safe here."*
+- **Why It Matters:** Using `Math.random()` to generate transaction identifiers (`req-${Date.now()}-${Math.random()}`) or token stubs is cryptographically predictable and vulnerable to collision under high concurrency.
+- **Remediation Action:** Replace `Math.random()` with the Web Crypto API standard `crypto.randomUUID()`.
 
-+----------------------------------------------------------------------------------------------------+
-| 3. MAINTAINABILITY CODE SMELL: S3776 — High Cognitive Complexity in Request Management Filter       |
-+----------------------------------------------------------------------------------------------------+
-| • Location:      src/pages/coordinator/ManageRequests.jsx:45-92                                    |
-| • Finding:       Multi-nested ternary statements and compounding filter predicates (Complexity: 18)|
-| • Quality Impact:Increases regression defect probability during future feature modifications.       |
-| • Action:        Refactor filtering logic into pure, composable predicate helper functions.        |
-+----------------------------------------------------------------------------------------------------+
+#### 3. Maintainability Code Smell `S3776` &bull; High Cognitive Complexity in Request Management
+- **Rule ID & Quality Area:** `javascript:S3776` &bull; Maintainability (Complexity Debt: 15 min)
+- **Location:** `src/pages/coordinator/ManageRequests.jsx:48` and `src/pages/coordinator/ManageUsers.jsx:62`
+- **What SonarQube Reported:** *"Refactor this function to reduce its Cognitive Complexity from 24 to the 15 allowed."*
+- **Why It Matters:** Deeply nested filtering predicates, multi-role branching, and modal state toggles make the code difficult to comprehend, verify, and maintain, increasing defect risk during future maintenance.
+- **Remediation Action:** Extract filtering, status mapping, and modal actions into modular custom hooks (`useRequestFilters`) and pure predicate functions.
 
-+----------------------------------------------------------------------------------------------------+
-| 4. MAINTAINABILITY CODE SMELL: S1192 — String Literal Duplication in Status Badges                |
-+----------------------------------------------------------------------------------------------------+
-| • Location:      src/pages/coordinator/ManageRequests.jsx & src/pages/supplier/SupplierRequests.jsx |
-| • Finding:       Status string literals ('Submitted', 'In-Review', 'Completed') duplicated 14 times|
-| • Quality Impact:Typo hazards and fragile status refactoring across decoupled portal views.        |
-| • Action:        Extract status literals into a shared frozen enum `REQUEST_STATUS` constant object.|
-+----------------------------------------------------------------------------------------------------+
+#### 4. Maintainability Code Smell `S3358` &bull; Nested Ternary Operators in Dynamic UI Badges
+- **Rule ID & Quality Area:** `javascript:S3358` &bull; Maintainability (Severity: Major)
+- **Location:** `src/pages/coordinator/ManageRequests.jsx` and `src/pages/supplier/SupplierRequests.jsx`
+- **What SonarQube Reported:** *"Extract this nested ternary operation into an independent statement."*
+- **Why It Matters:** Chaining ternary operators (`status === 'Completed' ? ... : status === 'In-Review' ? ... : ...`) severely impairs readability and violates clean code engineering standards.
+- **Remediation Action:** Replace nested ternary expressions with lookup mapping dictionaries (e.g. `STATUS_BADGE_MAP[status]`).
 
-+----------------------------------------------------------------------------------------------------+
-| 5. RELIABILITY CODE SMELL: S2147 — Uncaught JSON Deserialization in LocalStorage Fallback          |
-+----------------------------------------------------------------------------------------------------+
-| • Location:      src/services/dataService.js:32-48                                                 |
-| • Finding:       Direct `JSON.parse()` invocation without try/catch wrapper on corrupted storage.  |
-| • Quality Impact:Corrupted browser storage can crash the entire application lifecycle.             |
-| • Action:        Wrap storage retrieval in defensive fallback handlers with schema validation.    |
-+----------------------------------------------------------------------------------------------------+
-```
+#### 5. Maintainability Code Smell `S1128` & `S1854` &bull; Unused Imports & Dead Store Declarations
+- **Rule ID & Quality Area:** `javascript:S1128` / `javascript:S1854` &bull; Maintainability (Minor)
+- **Location:** `src/components/Navbar.jsx`, `src/pages/coordinator/AuditCompliance.jsx`, `src/components/Sidebar.jsx`
+- **What SonarQube Reported:** *"Remove this unused import."* / *"Remove this useless assignment to local variable."*
+- **Why It Matters:** Dead stores and unused imports inflate bundle payload size, create confusion regarding component dependencies, and add unnecessary maintenance overhead.
+- **Remediation Action:** Enable automated ESLint treeshaking rules (`no-unused-vars`, `unused-imports/no-unused-imports`) in build pipeline.
 
 ---
 

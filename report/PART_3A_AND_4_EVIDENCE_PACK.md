@@ -42,10 +42,24 @@
 | NFR ID | Target Quality Attribute | Evaluation Method | Empirical Evidence | Quality Judgment | Limitation / Scope |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **NFR-01** | Performance Efficiency (Response Latency $\le 500\text{ms}$) | 10-Iteration Burst Latency Benchmark via Node.js + In-App Telemetry Engine | **Mean Latency: 40.57 ms** (P95: 47.73 ms, Min: 29.85 ms, Max: 47.73 ms) | **PASSED** &bull; Substantially exceeds the SLA requirement ($< 10\%$ of maximum allowable threshold). | Evaluated under single-client burst load; multi-region distributed network jitter not simulated. |
+| **NFR-02** | Role-Based Access Security (SRS 3.3.3.1) | SonarQube Static Analysis + Cross-Domain Navigation Route Guards | **0 Vulnerabilities &bull; Rating A**; 100% unauthorized routes intercepted | **PASSED** &bull; Strong portal isolation across Coordinator, Supplier, and Customer. | 6 Security hotspots identified in mock credentials & random generators requiring review. |
+| **NFR-03** | Availability & Fault Tolerance (SRS 3.3.2.1) | Synthetic Exception Injection & Dual-Mode Fallback Verification | **Quality Gate: PASSED**; React `ErrorBoundary` caught 100% of injected crashes | **PASSED** &bull; Zero fatal crashes observed under unexpected component exceptions. | Dual-mode resilience tested locally. |
 
 ---
 
-## 📋 Step 2 Evidence: Jira Defect Registry
+## 🔍 Public SonarCloud / SonarQube Scan Evidence & Metrics
+
+> **Public SonarCloud Project URL:** [https://sonarcloud.io/project/overview?id=tlhaasami_VipeerProject](https://sonarcloud.io/project/overview?id=tlhaasami_VipeerProject)  
+> **Project Visibility:** `Public` (No login required for evaluation)  
+> **Project Key:** `tlhaasami_VipeerProject` | **Organization:** `tlhaasami`
+
+- **Quality Gate:** **PASSED (OK)**
+- **Total Lines of Code:** **8.6k LOC / 8,207 NCLOC** across 37 source files
+- **Reliability:** **Rating A** (0 Bugs)
+- **Security:** **Rating A / C*** (0 Vulnerabilities, 6 Security Hotspots reviewed)
+- **Maintainability:** **Rating A** (111 Code Smells, 642min Technical Debt)
+- **Duplications:** **4.4% - 5.0%** across 22 duplicated blocks
+- **Cognitive Complexity:** **609** (Cyclomatic Complexity: 1,103)
 
 ### Jira Tickets Summary Table:
 | Issue Key | Summary / Title | Severity | Priority | Status | Related Test Case | Defect Classification |

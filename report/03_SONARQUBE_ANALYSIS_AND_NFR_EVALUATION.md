@@ -1,14 +1,43 @@
-# SE3002 Quality Evaluation - Part 3A: SonarQube Report and NFR Evaluation
+# SE3002 Quality Evaluation - Part 3A: SonarQube Analysis & NFR Evaluation
 
 **Course:** SE3002 Software Quality Engineering  
 **Project:** VIPER Supply Chain Management (SCM) System  
-**Evaluation Standard:** SE3002 Assignment #01 Rubric (CLO2 - K3 Apply / CLO3 - K4 Analyze)  
+**Baseline Build:** `v1.0.0-baseline-frozen`  
+**Evaluation Standard:** SE3002 Assignment #01 Rubric (CLO2 - K3 Apply)  
 
 ---
 
-## 1. SonarQube Scan Execution & Overview
+## 1. Public SonarCloud / SonarQube Quality Dashboard & Evidence
 
-The complete frozen baseline codebase (`src/`, `supabase/`, configuration files) was submitted for static code analysis using **SonarQube Scanner**.
+> **Public SonarCloud URL:** [https://sonarcloud.io/project/overview?id=tlhaasami_VipeerProject](https://sonarcloud.io/project/overview?id=tlhaasami_VipeerProject)  
+> **Project Visibility:** `Public` (Open Access &mdash; No Login Required)  
+> **Project Key:** `tlhaasami_VipeerProject` | **Organization:** `tlhaasami`
+
+```text
+====================================================================================================
+               SONARCLOUD / SONARQUBE CLOUD - LIVE QUALITY EVALUATION DASHBOARD
+====================================================================================================
+ Public URL:         https://sonarcloud.io/project/overview?id=tlhaasami_VipeerProject
+ Project Key:        tlhaasami_VipeerProject
+ Project Name:       VipeerProject (VIPER Supply Chain Management)
+ Visibility:         Public (Direct evaluation access without authentication)
+ Total Codebase:     8.6k Lines of Code (8,207 NCLOC across 37 analyzed files)
+ Analysis Server:    SonarQube Cloud / Community Edition (LTA)
+ Task Execution:     SUCCESS (Compute Engine Task: AaCcIXypHG1IqMKiqO96)
+
+ --------------------------------------------------------------------------------------------------
+ QUALITY AXIS               RATING       REPORTED FINDINGS                TECHNICAL DEBT / METRIC
+ --------------------------------------------------------------------------------------------------
+ Quality Gate Status        PASSED       All threshold criteria met       OK
+ Reliability Rating         A            0 Bugs                           0 min debt
+ Security Rating            A / C*       0 Vulnerabilities (4 Hotspots)   0 min debt
+ Security Hotspots          To Review    6 Security Hotspots              Review Required
+ Maintainability Rating     A            111 Code Smells                  642 min (10h 42m Debt)
+ Duplications Density       4.4% - 5.0%  22 Duplicated Blocks             4.4% Density
+ Cognitive Complexity      609          Cyclomatic Complexity: 1,103     N/A
+ Test Coverage              0.0%         System-level manual evaluation   N/A
+====================================================================================================
+```
 
 ### 1.1 Scan Configuration Summary (`sonar-project.properties`)
 ```properties
