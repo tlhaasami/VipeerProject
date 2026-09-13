@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 export const Sidebar = ({ currentView, onNavigate, isMobileOpen, onCloseMobile }) => {
-  const { currentUser, domain, logout } = useAuth();
+  const { domain, logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const getMenuItems = () => {
@@ -148,7 +148,7 @@ export const Sidebar = ({ currentView, onNavigate, isMobileOpen, onCloseMobile }
                     title={item.label}
                     className={`w-full flex items-center ${
                       isCollapsed ? 'justify-start md:justify-center px-3 md:px-2 py-2.5' : 'justify-between px-3 py-2'
-                    } rounded-xl text-xs font-semibold transition-all ${
+                    } rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                       isActive
                         ? 'bg-[#6D0808] text-[#EEEAD7] shadow-md shadow-[#6D0808]/20'
                         : 'text-[#50574B] hover:text-[#2D0000] hover:bg-[#F8F6EC]'
@@ -164,29 +164,27 @@ export const Sidebar = ({ currentView, onNavigate, isMobileOpen, onCloseMobile }
             </nav>
           </div>
 
-          {/* Bottom Section: User Info & Exit */}
+          {/* Bottom Section: Dedicated Clean Exit / Sign Out in Left Sidebar */}
           <div className="pt-3 border-t border-[#D8D2BC]">
-            {/* User Profile Card */}
-            <div
-              className={`p-2 bg-[#F8F6EC] border border-[#D8D2BC] rounded-xl flex items-center ${
-                isCollapsed ? 'justify-between md:justify-center md:flex-col gap-2' : 'justify-between'
-              }`}
+            <button
+              onClick={logout}
+              className={`w-full flex items-center ${
+                isCollapsed ? 'justify-start md:justify-center px-3 md:px-2 py-2.5' : 'justify-between px-3.5 py-2.5'
+              } rounded-xl bg-[#F8F6EC] hover:bg-rose-50 text-[#6D0808] hover:text-rose-700 border border-[#D8D2BC] hover:border-rose-300 font-bold text-xs transition-all shadow-xs group cursor-pointer`}
+              title="Sign Out / Exit"
             >
-              <div className={`truncate pr-2 min-w-0 ${isCollapsed ? 'block md:hidden' : 'block'}`}>
-                <p className="text-xs font-bold text-[#2D0000] truncate leading-tight">{currentUser?.fullName || 'Active User'}</p>
-                <p className="text-[10px] text-[#757D6F] truncate font-medium">{currentUser?.roleTitle || currentUser?.username}</p>
+              <div className="flex items-center space-x-2.5 min-w-0">
+                <div className="w-6 h-6 rounded-lg bg-[#6D0808]/10 group-hover:bg-rose-100 flex items-center justify-center shrink-0 transition-colors">
+                  <LogOut className="w-3.5 h-3.5 text-[#6D0808] group-hover:text-rose-700" />
+                </div>
+                <span className={`truncate ${isCollapsed ? 'inline md:hidden' : 'inline'}`}>
+                  Sign Out / Exit
+                </span>
               </div>
-              <button
-                onClick={logout}
-                className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-white hover:bg-rose-50 text-[#6D0808] hover:text-rose-700 border border-[#D8D2BC] text-xs font-semibold transition-all shrink-0 shadow-sm cursor-pointer ${
-                  isCollapsed ? 'inline-flex md:p-2' : 'inline-flex'
-                }`}
-                title="Sign Out / Exit"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span className={isCollapsed ? 'inline md:hidden' : 'inline'}>Exit</span>
-              </button>
-            </div>
+              <span className={`text-[10px] text-[#757D6F] font-mono group-hover:text-rose-600 uppercase ${isCollapsed ? 'hidden' : 'inline'}`}>
+                Exit
+              </span>
+            </button>
           </div>
         </div>
       </aside>

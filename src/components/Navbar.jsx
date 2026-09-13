@@ -7,12 +7,25 @@ export const Navbar = ({ onToggleMobileMenu, isMobileMenuOpen }) => {
 
   const getDomainIcon = () => {
     switch (domain) {
-      case 'coordinator': return <Building2 className="w-3.5 h-3.5" />;
-      case 'supplier': return <Truck className="w-3.5 h-3.5" />;
-      case 'customer': return <Users className="w-3.5 h-3.5" />;
-      default: return null;
+      case 'coordinator':
+        return <Building2 className="w-3.5 h-3.5" />;
+      case 'supplier':
+        return <Truck className="w-3.5 h-3.5" />;
+      case 'customer':
+        return <Users className="w-3.5 h-3.5" />;
+      default:
+        return null;
     }
   };
+
+  const userInitials = currentUser?.fullName
+    ? currentUser.fullName
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .substring(0, 2)
+        .toUpperCase()
+    : 'U';
 
   return (
     <header className="shrink-0 sticky top-0 z-40 bg-white border-b border-[#D8D2BC] text-[#2D0000] shadow-sm">
@@ -45,20 +58,31 @@ export const Navbar = ({ onToggleMobileMenu, isMobileMenuOpen }) => {
           </div>
         </div>
 
-        {/* Right: Active Role Badge */}
-        {domain && (
-          <div className="flex items-center space-x-2">
-            <div className="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 bg-[#F8F6EC] border border-[#D8D2BC] rounded-xl text-xs font-bold text-[#2D0000]">
+        {/* Right: Active User Profile & Workspace Info in Navbar */}
+        <div className="flex items-center space-x-3">
+          {domain && (
+            <div className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 bg-[#F8F6EC] border border-[#D8D2BC] rounded-xl text-xs font-bold text-[#2D0000]">
               <span className="text-[#6D0808]">{getDomainIcon()}</span>
               <span className="capitalize">{domain} Workspace</span>
             </div>
-            {currentUser && (
-              <div className="w-8 h-8 rounded-full bg-[#6D0808] text-[#EEEAD7] font-bold text-xs flex items-center justify-center border-2 border-white shadow-sm sm:hidden">
-                {currentUser.fullName ? currentUser.fullName[0].toUpperCase() : 'U'}
+          )}
+
+          {currentUser && (
+            <div className="flex items-center space-x-2.5 pl-2 sm:border-l sm:border-[#D8D2BC]">
+              <div className="w-9 h-9 rounded-xl bg-[#6D0808] text-[#EEEAD7] font-extrabold text-xs flex items-center justify-center shadow-sm border border-[#6D0808]/20 shrink-0">
+                {userInitials}
               </div>
-            )}
-          </div>
-        )}
+              <div className="hidden sm:block text-left leading-tight min-w-0">
+                <p className="text-xs font-bold text-[#2D0000] truncate max-w-[130px] md:max-w-[170px] lg:max-w-[210px]">
+                  {currentUser.fullName || currentUser.username}
+                </p>
+                <p className="text-[10px] text-[#757D6F] font-medium truncate max-w-[130px] md:max-w-[170px] lg:max-w-[210px]">
+                  {currentUser.roleTitle || `@${currentUser.username}`}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
