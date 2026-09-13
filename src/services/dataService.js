@@ -97,13 +97,54 @@ export const dataService = {
   // Authentication (FR-04 & FR-07)
   async authenticate(username, password, selectedDomain) {
     const startTime = performance.now();
-    
-    // Simulate lightweight network roundtrip
+    const cleanUsername = username.trim().toLowerCase();
+
+    // 1. If Supabase Live Cloud is configured, query database directly
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data: dbUsers, error } = await supabase
+          .from('users')
+          .select('*')
+          .ilike('username', cleanUsername);
+
+        if (!error && dbUsers && dbUsers.length > 0) {
+          const matchedUser = dbUsers.find(
+            u => u.password_hash === password || u.password === password
+          );
+
+          if (!matchedUser) {
+            logTransaction('AUTH_FAILED', 'User', username, startTime, { username, selectedDomain }, selectedDomain);
+            return { success: false, reason: 'INVALID_CREDENTIALS' };
+          }
+
+          if (matchedUser.domain.toLowerCase() !== selectedDomain.toLowerCase()) {
+            logTransaction('DOMAIN_MISMATCH', 'User', username, startTime, { username, expected: matchedUser.domain, actual: selectedDomain }, selectedDomain);
+            return { success: false, reason: 'DOMAIN_MISMATCH', userDomain: matchedUser.domain };
+          }
+
+          const userObj = {
+            id: matchedUser.id,
+            username: matchedUser.username,
+            fullName: matchedUser.full_name || matchedUser.fullName,
+            email: matchedUser.email,
+            domain: matchedUser.domain,
+            roleTitle: matchedUser.role_title || matchedUser.roleTitle || `${matchedUser.domain.toUpperCase()} Specialist`
+          };
+
+          logTransaction('AUTH_SUCCESS_SUPABASE', 'User', userObj.id, startTime, { username: userObj.username, domain: userObj.domain }, userObj.domain);
+          return { success: true, user: userObj };
+        }
+      } catch (err) {
+        console.warn('Supabase auth fallback to local storage:', err);
+      }
+    }
+
+    // 2. Fallback to LocalStorage
     await new Promise(r => setTimeout(r, 60));
 
     const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
     const matchedUser = users.find(u => 
-      u.username.toLowerCase() === username.trim().toLowerCase() && 
+      u.username.toLowerCase() === cleanUsername && 
       u.password === password
     );
 
