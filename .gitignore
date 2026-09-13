@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-ssr
+*.local
+.env
+.DS_Store
+.system_generated
+.scannerwork
+sonar-project.properties.local
