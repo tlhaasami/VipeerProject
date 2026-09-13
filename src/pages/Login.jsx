@@ -21,8 +21,8 @@ import {
 
 export const Login = ({ onLoginError }) => {
   const { login, loading } = useAuth();
-  const [username, setUsername] = useState('coordinator');
-  const [password, setPassword] = useState('admin123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [domain, setDomain] = useState('coordinator');
   const [domainDropdownOpen, setDomainDropdownOpen] = useState(false);
